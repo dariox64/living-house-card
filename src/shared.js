@@ -84,6 +84,12 @@ const LHC_I18N = {
     aq_states: { excellent: "Excellent", good: "Good", moderate: "Moderate", poor: "Poor", very_poor: "Very poor" },
     dry_prog: { auto: "Auto", allergy_care: "Allergy care", refresh: "Refresh", sportswear: "Sportswear", towels: "Towels", time: "Timed", cotton: "Cotton", baby_care: "Baby care", synthetic: "Synthetics", wool: "Wool", delicates: "Delicates", quick_30: "Quick 30", shirts: "Shirts", bedding: "Bedding", down: "Down", eco: "Eco" },
     cold: "cold",
+    printer: "3D printer", pr_model: "Model", pr_camera: "Camera", pr_layer: "Layer", pr_nozzle: "Nozzle", pr_bed: "Bed",
+    pr_ends: (t) => `ends ${t}`, pr_left: "left", pr_pause: "Pause", pr_resume: "Resume", pr_stop: "Stop",
+    pr_stop_confirm: "Stop the print? This cannot be undone.", pr_printing: (p) => `Printing ${p}%`, pr_failed: "Print failed!",
+    pr_done: "Print done", pr_light: "Chamber light", pr_empty: "empty",
+    pr_status: { running: "Printing", pause: "Paused", finish: "Done", failed: "Failed", idle: "Idle", prepare: "Preparing", slicing: "Slicing", init: "Starting", offline: "Offline", unknown: "—" },
+    pr_stage: { heating_hotend: "Heating nozzle", heatbed_preheating: "Heating bed", auto_bed_leveling: "Bed levelling", changing_filament: "Changing filament", cleaning_nozzle_tip: "Cleaning nozzle", homing_toolhead: "Homing", filament_loading: "Loading filament", filament_unloading: "Unloading filament", inspecting_first_layer: "Checking first layer", calibrating_extrusion_flow: "Flow calibration", cooling_nozzle: "Cooling nozzle", paused_filament_runout: "Filament ran out!", paused_nozzle_clog: "Nozzle clogged!", paused_user: "Paused by user" },
     tv: "TV", tv_playing: "playing", washing: "Washing", drying: "Drying", clean_air: "Clean air", of_lights: "lights",
   },
   pl: {
@@ -142,6 +148,12 @@ const LHC_I18N = {
     aq_states: { excellent: "Doskonała", good: "Dobra", moderate: "Umiarkowana", poor: "Słaba", very_poor: "Bardzo słaba" },
     dry_prog: { auto: "Auto", allergy_care: "Antyalergiczny", refresh: "Odświeżanie", sportswear: "Sportowe", towels: "Ręczniki", time: "Czasowy", cotton: "Bawełna", baby_care: "Dziecięce", synthetic: "Syntetyki", wool: "Wełna", delicates: "Delikatne", quick_30: "Szybki 30", shirts: "Koszule", bedding: "Pościel", down: "Puch", eco: "Eco" },
     cold: "zimna",
+    printer: "Drukarka 3D", pr_model: "Model", pr_camera: "Kamera", pr_layer: "Warstwa", pr_nozzle: "Dysza", pr_bed: "Stół",
+    pr_ends: (t) => `koniec ${t}`, pr_left: "do końca", pr_pause: "Pauza", pr_resume: "Wznów", pr_stop: "Stop",
+    pr_stop_confirm: "Przerwać wydruk? Tego nie da się cofnąć.", pr_printing: (p) => `Drukuje ${p}%`, pr_failed: "Wydruk nieudany!",
+    pr_done: "Wydruk gotowy", pr_light: "Oświetlenie komory", pr_empty: "pusty",
+    pr_status: { running: "Drukuje", pause: "Pauza", finish: "Gotowe", failed: "Błąd", idle: "Bezczynna", prepare: "Przygotowanie", slicing: "Przygotowanie pliku", init: "Start", offline: "Offline", unknown: "—" },
+    pr_stage: { heating_hotend: "Nagrzewanie dyszy", heatbed_preheating: "Nagrzewanie stołu", auto_bed_leveling: "Poziomowanie stołu", changing_filament: "Zmiana filamentu", cleaning_nozzle_tip: "Czyszczenie dyszy", homing_toolhead: "Bazowanie", filament_loading: "Ładowanie filamentu", filament_unloading: "Wyładowanie filamentu", inspecting_first_layer: "Kontrola 1. warstwy", calibrating_extrusion_flow: "Kalibracja przepływu", cooling_nozzle: "Chłodzenie dyszy", paused_filament_runout: "Skończył się filament!", paused_nozzle_clog: "Zatkana dysza!", paused_user: "Wstrzymane" },
     tv: "TV", tv_playing: "gra", washing: "Pierze", drying: "Suszy", clean_air: "Czyste", of_lights: "świateł",
   },
 };
@@ -220,4 +232,22 @@ function lhcYaml(v, ind = 0) {
     if (x && typeof x === "object") return `${pad}${k}:\n${lhcYaml(x, ind + 1)}`;
     return `${pad}${k}: ${lhcScalar(x)}`;
   }).join("\n");
+}
+
+/* czas pozostały (sensor w h / min / s) -> "1 h 12 min" */
+function lhcDuration(st) {
+  if (!st || LHC_BAD.includes(st.state)) return null;
+  let v = Number(st.state);
+  if (!Number.isFinite(v)) return null;
+  const u = (st.attributes.unit_of_measurement || "min").toLowerCase();
+  let m = u === "h" ? v * 60 : u === "s" ? v / 60 : u === "d" ? v * 1440 : v;
+  m = Math.round(m);
+  if (m <= 0) return null;
+  const h = Math.floor(m / 60);
+  return h ? `${h} h ${m % 60} min` : `${m} min`;
+}
+function lhcRemainingMin(st) {
+  if (!st || LHC_BAD.includes(st.state)) return 0;
+  const v = Number(st.state), u = (st.attributes.unit_of_measurement || "min").toLowerCase();
+  return Number.isFinite(v) ? (u === "h" ? v * 60 : u === "s" ? v / 60 : v) : 0;
 }

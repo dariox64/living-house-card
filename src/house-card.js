@@ -18,6 +18,7 @@ const LHC_DEFAULTS = {
   purifier_name: null,
   pm25: null,
   energy: null,          // { power, today, cost, currency }
+  printer: null,         // { status, progress, remaining, page }
   main_thermostat: null,
   heating: [],
   nav: null,
@@ -177,7 +178,8 @@ class LivingHouseCard extends HTMLElement {
   _tracked() {
     if (this._trackedList) return this._trackedList;
     const c = this._cfg, e = this._energy;
-    const ids = new Set([c.weather, c.weather_fallback_temperature, c.sun, c.alarm, c.ventilation, c.purifier, c.pm25, e.power, e.today, e.cost, c.main_thermostat, ...this._allLights]);
+    const pr = c.printer || {};
+    const ids = new Set([pr.status, pr.progress, pr.remaining, c.weather, c.weather_fallback_temperature, c.sun, c.alarm, c.ventilation, c.purifier, c.pm25, e.power, e.today, e.cost, c.main_thermostat, ...this._allLights]);
     this._heatingList.forEach((h) => ids.add(h.entity));
     this._rooms.forEach((r) => {
       [r.temp, r.hum, r.humExtra, r.climateTemp, r.presence, ...(r.heat || []), ...((r.tv && r.tv.ids) || [])].forEach((x) => x && ids.add(x));
@@ -223,6 +225,7 @@ class LivingHouseCard extends HTMLElement {
       const z = Math.min(w / LHC_BASE_W, h / LHC_BASE_H);
       outer.style.height = `${h}px`;
       outer.style.setProperty("--z", z.toFixed(4));
+      requestAnimationFrame(() => this._fitStatus());
     } else {
       outer.style.height = "";
       outer.style.removeProperty("--z");
@@ -476,10 +479,33 @@ class LivingHouseCard extends HTMLElement {
     if (c.ventilation) rows.push(row("mdi:fan", vent && vent.state === "on" ? "#38bdf8" : "#64748b", this._t("ventilation"), vent ? (vent.state === "on" ? this._t("running") : vent.state === "off" ? this._t("off_f") : this._t("no_data")) : "—", `data-more="${lhcEsc(c.ventilation)}"`));
     if (c.alarm) rows.push(row("mdi:shield-check-outline", al ? LHC_ALARM_COLOR[al.state] || "#4ade80" : "#94a3b8", this._t("security"), al ? lhcMap(this._lang, "alarm", al.state, al.state) : this._t("none"), `data-more="${lhcEsc(c.alarm)}"`));
     if (c.pm25) rows.push(row("mdi:leaf", air[1], this._t("air_quality"), air[0], `data-more="${lhcEsc(c.pm25)}"`));
+    if (c.printer && c.printer.status) {
+      const p = c.printer, ps = this._s(p.status), st = ps ? ps.state : "unknown";
+      const prog = Math.round(Number(this._s(p.progress) && this._s(p.progress).state) || 0);
+      const left = lhcDuration(this._s(p.remaining));
+      const val = st === "running" ? `${this._t("pr_printing", prog)}${left ? ` · ${left}` : ""}` : lhcMap(this._lang, "pr_status", st, st);
+      const col = st === "running" ? "#22d3ee" : st === "failed" ? "#f87171" : st === "pause" ? "#facc15" : st === "finish" ? "#4ade80" : "#64748b";
+      const go = p.page && c.rooms_page ? `data-nav="${lhcEsc(c.rooms_page)}#${lhcEsc(p.page)}"` : `data-more="${lhcEsc(p.progress || p.status)}"`;
+      rows.push(row(st === "failed" ? "mdi:printer-3d-nozzle-alert" : "mdi:printer-3d-nozzle", col, p.name || this._t("printer"), val, go));
+    }
     this._el("status").innerHTML = `
       <div class="p-title">${this._t("status_title")}</div>
       <div class="s-head">${this._icon(head[1], `style="color:${head[2]}"`)}<span>${head[0]}</span></div>
       ${rows.join("")}`;
+    this._fitStatus();
+  }
+
+  /* gdy wiersze statusu się nie mieszczą – zagęść je (najpierw odstępy, potem ukryj opisy) */
+  _fitStatus() {
+    const el = this._el("status");
+    if (!el) return;
+    const check = () => {
+      el.classList.remove("tight", "tighter");
+      if (el.scrollHeight - el.clientHeight > 1) el.classList.add("tight");
+      if (el.scrollHeight - el.clientHeight > 1) el.classList.add("tighter");
+    };
+    check();
+    requestAnimationFrame(check);
   }
 
   _renderHeat() {

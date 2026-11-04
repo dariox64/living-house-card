@@ -353,3 +353,49 @@ h2{font-size:clamp(34px,5vw,58px);font-weight:700;letter-spacing:-.02em;line-hei
 .page.fit .sgrid{grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
 .page.fit .sens{padding:10px 12px}
 .page.fit .colA .sgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+
+/* ---------- drukarka 3D ---------- */
+.cyan{color:#22d3ee}
+.pulse-ic{animation:pulse 1.6s ease-in-out infinite}
+.chip.pr{border-color:rgba(34,211,238,.6)}
+.dev.printer.printing{border-color:rgba(34,211,238,.5);box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 0 30px rgba(34,211,238,.18)}
+.dev.printer.failed{border-color:rgba(248,113,113,.8);animation:alarm 1.4s infinite}
+.dev.printer .dev-ic{color:#67e8f9}
+.pr-body{display:flex;gap:14px;align-items:center}
+.pr-media{position:relative;flex:1;min-width:0;aspect-ratio:16/10;max-height:300px;border-radius:16px;overflow:hidden;background:rgba(2,6,16,.6);border:1px solid var(--line)}
+.pr-media img{width:100%;height:100%;display:block}
+.pr-media img.model{object-fit:contain;padding:6px;filter:drop-shadow(0 6px 14px rgba(0,0,0,.6))}
+.pr-media img.cam{object-fit:cover}
+.pr-noimg{width:100%;height:100%;display:grid;place-items:center;color:#475569}
+.pr-noimg ha-icon{--mdc-icon-size:46px}
+.pr-tabs{position:absolute;left:8px;bottom:8px;display:flex;gap:4px;padding:3px;border-radius:999px;background:rgba(4,8,20,.7);backdrop-filter:blur(8px)}
+.pr-tabs button{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;font-size:11.5px;color:#cbd5e1}
+.pr-tabs button.on{background:rgba(34,211,238,.25);color:#fff}
+.live-dot{width:7px;height:7px;border-radius:50%;background:#f43f5e;box-shadow:0 0 6px #f43f5e;animation:blink 1.4s infinite}
+.pr-ring{position:relative;width:128px;height:128px;flex:none}
+.pr-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.pr-track{fill:none;stroke:rgba(255,255,255,.08);stroke-width:10}
+.pr-fill{fill:none;stroke:#22d3ee;stroke-width:10;stroke-linecap:round;transition:stroke-dashoffset 1s ease;filter:drop-shadow(0 0 6px rgba(34,211,238,.7))}
+.printer.printing .pr-fill{animation:prglow 2.4s ease-in-out infinite}
+.pr-c{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.pr-c b{font-size:30px;font-weight:600;line-height:1}.pr-c b small{font-size:15px;color:var(--dim)}
+.pr-c span{font-size:12px;color:#a5f3fc;margin-top:4px}
+.pr-task{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pr-task ha-icon{--mdc-icon-size:18px;color:#67e8f9;flex:none}
+.pr-task span{overflow:hidden;text-overflow:ellipsis}
+.pr-meta,.pr-temps{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--dim)}
+.pr-meta>div,.pr-temp{display:flex;align-items:center;gap:6px}
+.pr-meta ha-icon,.pr-temp ha-icon{--mdc-icon-size:17px}
+.pr-meta b,.pr-temp b{color:var(--txt);font-weight:600}
+.pr-temp small{color:var(--dim)}
+.pr-temp.hot ha-icon{color:#fb923c}
+.fils{display:flex;gap:8px;flex-wrap:wrap}
+.fil{display:flex;align-items:center;gap:6px;padding:4px 10px 4px 5px;border-radius:999px;font-size:12px;border:1px solid var(--line);background:rgba(255,255,255,.04)}
+.fil i{width:16px;height:16px;border-radius:50%;box-shadow:inset 0 0 0 2px rgba(255,255,255,.25)}
+.fil.empty{opacity:.45}.fil.empty i{box-shadow:inset 0 0 0 2px rgba(255,255,255,.2);background:repeating-linear-gradient(45deg,transparent 0 3px,rgba(255,255,255,.15) 3px 5px)!important}
+.fil.on{border-color:#22d3ee;box-shadow:0 0 10px rgba(34,211,238,.4)}
+.mchip.danger{border-color:rgba(248,113,113,.55);color:#fecaca}
+.mchip.danger:hover{background:rgba(248,113,113,.15)}
+.page.fit .pr-ring{width:110px;height:110px}
+.page.fit .pr-media{aspect-ratio:16/9;max-height:230px}
+@keyframes prglow{50%{filter:drop-shadow(0 0 12px rgba(34,211,238,1))}}

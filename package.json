@@ -1,6 +1,6 @@
 {
   "name": "living-house-card",
-  "version": "0.1.0",
+  "version": "0.2.2",
   "description": "A living 3D house dashboard for Home Assistant – lights, TV glow, weather, day/night, heat map and room views.",
   "type": "module",
   "private": true,

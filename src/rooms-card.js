@@ -44,6 +44,11 @@ class LivingRoomsCard extends HTMLElement {
       };
     });
   }
+  _img(r) {
+    const v = r.image || "";
+    if (/^(camera|image)\./.test(v)) { const st = this._hass && this._hass.states[v]; return st && st.attributes.entity_picture ? st.attributes.entity_picture : ""; }
+    return v;
+  }
   _normDevice(d) {
     if (!d || !d.type) return null;
     const sw = (l) => lhcArr(l).map((x) => (typeof x === "string" ? { entity: x } : x)).filter((x) => x.entity);
@@ -52,6 +57,12 @@ class LivingRoomsCard extends HTMLElement {
       case "pet_feeder": case "feeder": return { type: "feeder", status: d.status, manual: d.portions || d.manual, switches: sw(d.switches), name: d.name };
       case "litter_box": case "litter": return { type: "litter", status: d.status, clean: d.clean, switches: sw(d.switches), name: d.name };
       case "washer": return { type: "washer", status: d.status, remaining: d.remaining, temp: d.temperature, name: d.name };
+      case "printer": case "3d_printer": return {
+        type: "printer", name: d.name, status: d.status, stage: d.stage, progress: d.progress, remaining: d.remaining, end_time: d.end_time,
+        layer: d.layer, total_layers: d.total_layers, task: d.task, nozzle: d.nozzle, nozzle_target: d.nozzle_target, bed: d.bed, bed_target: d.bed_target,
+        image: d.image, camera: d.camera, light: d.light, pause: d.pause, resume: d.resume, stop: d.stop,
+        filaments: lhcArr(d.filaments).map((x) => (typeof x === "string" ? x : x && x.entity)).filter(Boolean),
+      };
       case "dryer": return { type: "dryer", status: d.status, remaining: d.remaining, program: d.program, water: d.water_full, filter: d.filter, name: d.name };
       default: return null;
     }
@@ -74,6 +85,14 @@ class LivingRoomsCard extends HTMLElement {
     if (!this._ro && window.ResizeObserver) this._ro = new ResizeObserver(() => { const w = this.clientWidth; if (w !== this._lastW && this._root) { this._lastW = w; this._fit(); } });
     if (this._ro) this._ro.observe(this);
     this._clock = setInterval(() => this._renderClock(), 15000);
+    clearInterval(this._camT);
+    this._camT = setInterval(() => {
+      if (!this._view || document.hidden || !this._root) return;
+      this._root.querySelectorAll("img[data-cam]").forEach((im) => {
+        const st = this._hass && this._hass.states[im.dataset.cam];
+        if (st && st.attributes.entity_picture) im.src = `${st.attributes.entity_picture}&_=${Date.now()}`;
+      });
+    }, 8000);
     if (this._root) { this._route(); this._fit(); }
   }
   disconnectedCallback() {
@@ -83,6 +102,7 @@ class LivingRoomsCard extends HTMLElement {
     window.removeEventListener("resize", this._onResize);
     if (this._ro) this._ro.disconnect();
     clearInterval(this._clock);
+    clearInterval(this._camT);
   }
 
   set hass(h) {
@@ -109,6 +129,7 @@ class LivingRoomsCard extends HTMLElement {
     r.sensors.forEach((s) => ids.push(s[0]));
     r.devices.forEach((d) => Object.entries(d).forEach(([k, v]) => {
       if (k === "switches") v.forEach((x) => ids.push(x.entity));
+      else if (k === "filaments") v.forEach((x) => ids.push(x));
       else if (!["type", "name"].includes(k)) ids.push(v);
     }));
     return ids.filter(Boolean);
@@ -144,6 +165,7 @@ class LivingRoomsCard extends HTMLElement {
     r.devices.forEach((d) => {
       if (d.type === "dryer" && this._on(d.water)) out.push(["mdi:cup-water", this._t("waterbox_full"), "warn"]);
       if (d.type === "washer" && this._s(d.status)?.state === "alarm") out.push(["mdi:alert", this._t("washer_alarm"), "bad"]);
+      if (d.type === "printer" && this._s(d.status)?.state === "failed") out.push(["mdi:printer-3d-nozzle-alert", this._t("pr_failed"), "bad"]);
     });
     return out;
   }
@@ -203,7 +225,7 @@ class LivingRoomsCard extends HTMLElement {
       <div class="bento" style="--rows:${rows}">
         ${this._rooms.map((r, i) => `
           <article class="tile t-${r.id} sz-${sizes[i]} rise" style="--d:${i + 1};--acc:${r.accent}" data-open="${r.id}">
-            <div class="t-img" style="${r.image ? `background-image:url('${lhcEsc(r.image)}')` : ""}"></div>
+            <div class="t-img" style="${this._img(r) ? `background-image:url('${lhcEsc(this._img(r))}')` : ""}"></div>
             <div class="t-shade"></div><div class="t-glare"></div>
             <div class="t-top">
               <span class="t-ic glass">${this._icon(r.icon)}</span>
@@ -255,6 +277,12 @@ class LivingRoomsCard extends HTMLElement {
       r.devices.forEach((d) => {
         if (d.type === "washer" && this._s(d.status)?.state === "running") chips.push(`<span class="chip">${this._icon("mdi:washing-machine", 'class="violet spin"')}${this._t("washing")}</span>`);
         if (d.type === "dryer" && this._s(d.status)?.state === "running") chips.push(`<span class="chip">${this._icon("mdi:tumble-dryer", 'class="violet spin"')}${this._t("drying")}</span>`);
+        if (d.type === "printer") {
+          const pst = this._s(d.status), st = pst && pst.state, pr = Math.round(Number(this._s(d.progress)?.state) || 0);
+          if (st === "running" || st === "prepare") chips.push(`<span class="chip pr">${this._icon("mdi:printer-3d-nozzle", 'class="cyan pulse-ic"')}${this._t("pr_printing", pr)}</span>`);
+          if (st === "pause") chips.push(`<span class="chip">${this._icon("mdi:pause-circle-outline", 'class="amber"')}${this._m("pr_status", "pause")}</span>`);
+          if (st === "finish" && Date.now() - new Date(pst.last_changed).getTime() < 6 * 3600e3) chips.push(`<span class="chip">${this._icon("mdi:check-circle-outline", 'class="green"')}${this._t("pr_done")}</span>`);
+        }
         if (d.type === "purifier" && this._on(d.fan)) chips.push(`<span class="chip">${this._icon("mdi:air-purifier", 'class="green"')}${this._t("clean_air")}</span>`);
       });
       t.querySelector('[data-k="chips"]').innerHTML = chips.join("");
@@ -332,16 +360,16 @@ class LivingRoomsCard extends HTMLElement {
     room.hidden = false;
     hub.hidden = true;
     hub.classList.remove("back-in");
-    this._el("bgimg").style.backgroundImage = r.image ? `url('${lhcEsc(r.image)}')` : "";
+    this._el("bgimg").style.backgroundImage = this._img(r) ? `url('${lhcEsc(this._img(r))}')` : "";
     if (!this._isFit()) window.scrollTo({ top: 0 });
     room.classList.remove("enter", "slide-l", "slide-r");
     void room.offsetWidth;
     const hero = room.querySelector(".hero-img");
-    if (startRect && hero && r.image && !(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches)) {
+    if (startRect && hero && this._img(r) && !(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches)) {
       const end = hero.getBoundingClientRect();
       const ghost = document.createElement("div");
       ghost.className = "ghost";
-      ghost.style.backgroundImage = `url('${lhcEsc(r.image)}')`;
+      ghost.style.backgroundImage = `url('${lhcEsc(this._img(r))}')`;
       this._root.querySelector(".page").appendChild(ghost);
       room.classList.add("enter-flip");
       const anim = ghost.animate([
@@ -409,7 +437,7 @@ class LivingRoomsCard extends HTMLElement {
       chart: sec("chart", this._t("sec_chart"), "mdi:chart-bell-curve-cumulative", r.temp || r.hum ? `<div class="chart glass" id="chart"><div class="muted pad">${this._t("loading_history")}</div></div>` : ""),
     };
     let A = ["chart"], B = ["lights", "climate"], C = ["media", "devices", "sensors"];
-    if (!S.lights && !S.climate) { B = ["devices"]; C = ["media", "sensors"]; }
+    if (!S.climate && S.devices) { B = ["lights", "devices"]; C = ["media", "sensors"]; }
     if (!S.chart) { A = ["sensors"]; B = B.filter((k) => k !== "sensors"); C = C.filter((k) => k !== "sensors"); }
     const col = (keys) => keys.map((k) => S[k]).join("");
     const cC = col(C);
@@ -423,7 +451,7 @@ class LivingRoomsCard extends HTMLElement {
       <div class="rgrid ${cC ? "" : "two"}">
         <div class="col colA">
           <div class="hero" style="--acc:${r.accent};order:0">
-            <div class="hero-img" style="${r.image ? `background-image:url('${lhcEsc(r.image)}')` : ""}"></div>
+            <div class="hero-img" style="${this._img(r) ? `background-image:url('${lhcEsc(this._img(r))}')` : ""}"></div>
             <div class="hero-shade"></div>
             <div class="hero-body">
               <div class="hero-ic">${this._icon(r.icon)}</div>
@@ -678,6 +706,7 @@ class LivingRoomsCard extends HTMLElement {
           ${d.switches.length ? `<div class="toggles">${sws(d.switches)}</div>` : ""}
         </div>`;
     }
+    if (d.type === "printer") return this._wPrinter(d);
     if (d.type === "washer" || d.type === "dryer") {
       const washer = d.type === "washer";
       const s = this._s(d.status);
@@ -694,6 +723,71 @@ class LivingRoomsCard extends HTMLElement {
         </div>`;
     }
     return "";
+  }
+
+  _wPrinter(d) {
+    const S = (id) => (id ? this._s(id) : undefined);
+    const st = (S(d.status) && S(d.status).state) || "unknown";
+    const avail = !!S(d.status) && !LHC_BAD.includes(st) && st !== "offline";
+    const active = ["running", "prepare", "pause", "init", "slicing"].includes(st);
+    const pr = Math.max(0, Math.min(100, Number(S(d.progress) && S(d.progress).state) || 0));
+    const left = lhcDuration(S(d.remaining));
+    const tz = this._hass.config.time_zone, loc = this._lang === "pl" ? "pl-PL" : undefined;
+    let ends = "";
+    try {
+      const et = S(d.end_time);
+      if (et && !LHC_BAD.includes(et.state)) ends = new Date(et.state).toLocaleTimeString(loc, { hour: "2-digit", minute: "2-digit", timeZone: tz });
+      else if (active && lhcRemainingMin(S(d.remaining)) > 0) ends = new Date(Date.now() + lhcRemainingMin(S(d.remaining)) * 60000).toLocaleTimeString(loc, { hour: "2-digit", minute: "2-digit", timeZone: tz });
+    } catch (e) { ends = ""; }
+    const stage = S(d.stage) && S(d.stage).state;
+    const stageTxt = active && stage && !["printing", "idle", "unknown", "offline"].includes(stage) ? this._m("pr_stage", stage, stage.replace(/_/g, " ")) : "";
+    const pic = (id) => (S(id) && S(id).attributes.entity_picture) || "";
+    const camPic = pic(d.camera), modelPic = pic(d.image);
+    const view = this._prView || (st === "running" && camPic ? "camera" : "model");
+    const showCam = view === "camera" && !!camPic;
+    const imgSrc = showCam ? `${camPic}&_=${Math.floor(Date.now() / 8000)}` : modelPic || camPic;
+    const R = 52, C = 2 * Math.PI * R;
+    const temp = (cur, tgt, label, icon) => {
+      if (!d[cur]) return "";
+      const c = this._num(S(d[cur]) && S(d[cur]).state, 0);
+      const t = d[tgt] ? this._num(S(d[tgt]) && S(d[tgt]).state, 0) : null;
+      return `<div class="pr-temp ${Number(c) > 45 ? "hot" : ""}">${this._icon(icon)}<span>${label}</span><b>${c}°</b>${t && t !== "0" && t !== "—" ? `<small>/ ${t}°</small>` : ""}</div>`;
+    };
+    const fil = d.filaments.map((id) => {
+      const f = S(id);
+      if (!f) return "";
+      const a = f.attributes, empty = a.empty || f.state === "Empty";
+      const col = String(a.color || "#000000").slice(0, 7);
+      return `<div class="fil ${a.active ? "on" : ""} ${empty ? "empty" : ""}" title="${lhcEsc(f.state)}"><i style="background:${empty ? "transparent" : col}"></i><span>${empty ? this._t("pr_empty") : lhcEsc(a.type || f.state)}</span></div>`;
+    }).join("");
+    const btn = (id, icon, label, cls = "") => (id && S(id) && S(id).state !== "unavailable" ? `<button class="mchip ${cls}" data-press="${lhcEsc(id)}" ${cls === "danger" ? 'data-confirm="1"' : ""}>${this._icon(icon)}${label}</button>` : "");
+    const light = S(d.light);
+    const task = S(d.task);
+    return `
+      <div class="dev glass printer ${active ? "printing" : ""} ${st === "failed" ? "failed" : ""} ${!avail ? "is-off" : ""}">
+        <div class="dev-hd">${this._icon("mdi:printer-3d-nozzle", `class="dev-ic ${st === "running" ? "pulse-ic" : ""}"`)}<div><div class="dev-name">${lhcEsc(d.name || this._t("printer"))}</div>
+          <div class="dev-sub">${this._m("pr_status", st, lhcEsc(st))}${stageTxt ? ` · ${lhcEsc(stageTxt)}` : ""}</div></div>
+          ${light ? `<button class="power ${light.state === "on" ? "on" : ""}" data-toggle="${lhcEsc(d.light)}" title="${this._t("pr_light")}">${this._icon(light.state === "on" ? "mdi:lightbulb-on" : "mdi:lightbulb-outline")}</button>` : ""}
+        </div>
+        <div class="pr-body">
+          <div class="pr-media">
+            ${imgSrc ? `<img src="${lhcEsc(imgSrc)}" alt="" ${showCam ? `data-cam="${lhcEsc(d.camera)}"` : ""} class="${showCam ? "cam" : "model"}">` : `<div class="pr-noimg">${this._icon("mdi:cube-outline")}</div>`}
+            ${camPic && modelPic ? `<div class="pr-tabs"><button class="${!showCam ? "on" : ""}" data-prview="model">${this._t("pr_model")}</button><button class="${showCam ? "on" : ""}" data-prview="camera"><i class="live-dot"></i>${this._t("pr_camera")}</button></div>` : ""}
+          </div>
+          <div class="pr-ring">
+            <svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="${R}" class="pr-track"/><circle cx="60" cy="60" r="${R}" class="pr-fill" style="stroke-dasharray:${C.toFixed(1)};stroke-dashoffset:${(C * (1 - pr / 100)).toFixed(1)}"/></svg>
+            <div class="pr-c"><b>${active || st === "finish" ? Math.round(pr) : "—"}<small>%</small></b>${left && active ? `<span>${left}</span>` : ""}</div>
+          </div>
+        </div>
+        ${task && !LHC_BAD.includes(task.state) ? `<div class="pr-task">${this._icon("mdi:file-cad-box")}<span>${lhcEsc(task.state.replace(/\.(stl|3mf|gcode)$/i, "").replace(/_/g, " "))}</span></div>` : ""}
+        <div class="pr-meta">
+          ${d.layer && d.total_layers ? `<div>${this._icon("mdi:layers-triple-outline")}<span>${this._t("pr_layer")}</span><b>${this._num(S(d.layer) && S(d.layer).state, 0)} / ${this._num(S(d.total_layers) && S(d.total_layers).state, 0)}</b></div>` : ""}
+          ${ends && active ? `<div>${this._icon("mdi:flag-checkered")}<span>${this._t("pr_ends", ends)}</span></div>` : ""}
+        </div>
+        <div class="pr-temps">${temp("nozzle", "nozzle_target", this._t("pr_nozzle"), "mdi:printer-3d-nozzle-heat-outline")}${temp("bed", "bed_target", this._t("pr_bed"), "mdi:radiator")}</div>
+        ${fil ? `<div class="fils">${fil}</div>` : ""}
+        ${active ? `<div class="mchips pr-ctl">${st === "pause" ? btn(d.resume, "mdi:play", this._t("pr_resume")) : btn(d.pause, "mdi:pause", this._t("pr_pause"))}${btn(d.stop, "mdi:stop", this._t("pr_stop"), "danger")}</div>` : ""}
+      </div>`;
   }
 
   /* ---------- historia 24h ---------- */
@@ -755,11 +849,20 @@ class LivingRoomsCard extends HTMLElement {
   _click(e) {
     const path = e.composedPath();
     const stop = path.indexOf(this._root);
-    const keys = ["open", "nav", "hub", "goto", "toggle", "roomlights", "rgb", "kelvin", "hvac", "tstep", "media", "mpower", "preset", "portion", "feed", "clean", "more"];
+    const keys = ["prview", "press", "open", "nav", "hub", "goto", "toggle", "roomlights", "rgb", "kelvin", "hvac", "tstep", "media", "mpower", "preset", "portion", "feed", "clean", "more"];
     const t = (stop >= 0 ? path.slice(0, stop) : path).find((n) => n.dataset && Object.keys(n.dataset).some((k) => keys.includes(k)));
     if (!t || t.tagName === "INPUT") return;
     const d = t.dataset;
     e.stopPropagation();
+    if (d.prview) {
+      this._prView = d.prview;
+      (this._widgets || []).filter((w) => w.key.startsWith("d:")).forEach((w) => this._rerender(w.key));
+      return;
+    }
+    if (d.press) {
+      if (d.confirm && !confirm(this._t("pr_stop_confirm"))) return;
+      return this._call("button", "press", { entity_id: d.press });
+    }
     if (d.roomlights) {
       const r = this._rooms.find((x) => x.id === d.roomlights);
       const ids = r.lights.filter((l) => l[3] !== "fan" && this._ok(l[0])).map((l) => l[0]);

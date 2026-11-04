@@ -27,7 +27,7 @@
 
 ### Rooms card
 
-A second card, **`living-rooms-card`**, turns your rooms into a mosaic of big photo tiles. Tap a tile – the photo flies into a full room view with lights (brightness, colours, warm/cool), round thermostat dials, media with artwork, sensors, a 24 h chart and devices like an air purifier, pet feeder, litter box, washer and dryer.
+A second card, **`living-rooms-card`**, turns your rooms into a mosaic of big photo tiles. Tap a tile – the photo flies into a full room view with lights (brightness, colours, warm/cool), round thermostat dials, media with artwork, sensors, a 24 h chart and devices like an air purifier, pet feeder, litter box, washer, dryer and a **3D printer** (progress ring, live camera, AMS filament colours, pause/stop).
 
 | Rooms | Room view |
 |---|---|

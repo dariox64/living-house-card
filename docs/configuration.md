@@ -26,6 +26,7 @@ All positions are **percentages of the picture** (0–100), so they work at any 
 | `purifier` / `purifier_name` | entity / string | – | Air purifier (`fan.*`) with a power button. |
 | `pm25` | entity | – | PM2.5 sensor (air quality). |
 | `energy` | object | – | `{ power, today, cost, currency }` – power in W or kW, today in kWh. Shows a 24 h sparkline. |
+| `printer` | object | – | `{ status, progress, remaining, page, name }` – adds a 3D printer row to the status panel (“Printing 45% · 1 h 12 min”). `page` opens that room on the rooms dashboard. |
 | `main_thermostat` | entity | – | Used by the status panel and the screensaver. |
 | `heating` | list | `[]` | `- entity: climate.x` + optional `name`, `icon`. |
 | `rooms_page` | path | – | Path of your rooms dashboard, e.g. `/my-rooms/rooms`. Adds the *Rooms* tab and *Open room* buttons. |
@@ -97,7 +98,7 @@ rooms:
   - id: living                          # used in the URL: /my-rooms/rooms#living
     name: Living room
     icon: mdi:sofa-outline
-    image: /local/living-house/rooms/living.webp
+    image: /local/living-house/rooms/living.webp   # or a camera.* / image.* entity
     accent: "#f59e0b"                   # tile colour
     size: big                           # big | wide | tall | normal (first room = big)
     subtitle: Warm light. Good rest.
@@ -141,6 +142,29 @@ rooms:
         status: sensor.washer_status               # off / standby / running / paused / alarm
         remaining: sensor.washer_remaining_time    # minutes
         temperature: select.washer_temperature
+      - type: printer                              # 3D printer (Bambu Lab, or any printer via entity mapping)
+        name: Bambu Lab A1
+        status: sensor.printer_print_status        # running / pause / finish / failed / idle / prepare
+        stage: sensor.printer_current_stage        # optional, e.g. heating_hotend
+        progress: sensor.printer_print_progress    # %
+        remaining: sensor.printer_remaining_time   # h / min / s
+        end_time: sensor.printer_end_time          # optional timestamp
+        layer: sensor.printer_current_layer
+        total_layers: sensor.printer_total_layer_count
+        task: sensor.printer_task_name
+        nozzle: sensor.printer_nozzle_temperature
+        nozzle_target: sensor.printer_nozzle_target_temperature
+        bed: sensor.printer_bed_temperature
+        bed_target: sensor.printer_bed_target_temperature
+        image: image.printer_cover_image           # model preview
+        camera: camera.printer_camera              # live view (refreshes every 8 s)
+        light: light.printer_chamber_light
+        pause: button.printer_pause
+        resume: button.printer_resume
+        stop: button.printer_stop                  # asks before stopping
+        filaments:                                 # AMS slots – colour from the `color` attribute
+          - sensor.printer_ams_1_tray_1
+          - sensor.printer_ams_1_tray_2
       - type: dryer
         status: sensor.dryer_phase
         remaining: sensor.dryer_remaining_time

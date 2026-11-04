@@ -1,8 +1,8 @@
-/*! Living House Card v0.1.0 | MIT License | https://github.com/krystianokris/living-house-card */
+/*! Living House Card v0.2.2 | MIT License | https://github.com/krystianokris/living-house-card */
 (() => {
 "use strict";
 /* ---------- Living House Card – shared helpers ---------- */
-const LHC_VERSION = "0.1.0";
+const LHC_VERSION = "0.2.2";
 const LHC_BAD = ["unknown", "unavailable", undefined, null, ""];
 const LHC_TV_ON = ["on", "playing", "paused", "buffering"];
 
@@ -87,6 +87,12 @@ const LHC_I18N = {
     aq_states: { excellent: "Excellent", good: "Good", moderate: "Moderate", poor: "Poor", very_poor: "Very poor" },
     dry_prog: { auto: "Auto", allergy_care: "Allergy care", refresh: "Refresh", sportswear: "Sportswear", towels: "Towels", time: "Timed", cotton: "Cotton", baby_care: "Baby care", synthetic: "Synthetics", wool: "Wool", delicates: "Delicates", quick_30: "Quick 30", shirts: "Shirts", bedding: "Bedding", down: "Down", eco: "Eco" },
     cold: "cold",
+    printer: "3D printer", pr_model: "Model", pr_camera: "Camera", pr_layer: "Layer", pr_nozzle: "Nozzle", pr_bed: "Bed",
+    pr_ends: (t) => `ends ${t}`, pr_left: "left", pr_pause: "Pause", pr_resume: "Resume", pr_stop: "Stop",
+    pr_stop_confirm: "Stop the print? This cannot be undone.", pr_printing: (p) => `Printing ${p}%`, pr_failed: "Print failed!",
+    pr_done: "Print done", pr_light: "Chamber light", pr_empty: "empty",
+    pr_status: { running: "Printing", pause: "Paused", finish: "Done", failed: "Failed", idle: "Idle", prepare: "Preparing", slicing: "Slicing", init: "Starting", offline: "Offline", unknown: "—" },
+    pr_stage: { heating_hotend: "Heating nozzle", heatbed_preheating: "Heating bed", auto_bed_leveling: "Bed levelling", changing_filament: "Changing filament", cleaning_nozzle_tip: "Cleaning nozzle", homing_toolhead: "Homing", filament_loading: "Loading filament", filament_unloading: "Unloading filament", inspecting_first_layer: "Checking first layer", calibrating_extrusion_flow: "Flow calibration", cooling_nozzle: "Cooling nozzle", paused_filament_runout: "Filament ran out!", paused_nozzle_clog: "Nozzle clogged!", paused_user: "Paused by user" },
     tv: "TV", tv_playing: "playing", washing: "Washing", drying: "Drying", clean_air: "Clean air", of_lights: "lights",
   },
   pl: {
@@ -145,6 +151,12 @@ const LHC_I18N = {
     aq_states: { excellent: "Doskonała", good: "Dobra", moderate: "Umiarkowana", poor: "Słaba", very_poor: "Bardzo słaba" },
     dry_prog: { auto: "Auto", allergy_care: "Antyalergiczny", refresh: "Odświeżanie", sportswear: "Sportowe", towels: "Ręczniki", time: "Czasowy", cotton: "Bawełna", baby_care: "Dziecięce", synthetic: "Syntetyki", wool: "Wełna", delicates: "Delikatne", quick_30: "Szybki 30", shirts: "Koszule", bedding: "Pościel", down: "Puch", eco: "Eco" },
     cold: "zimna",
+    printer: "Drukarka 3D", pr_model: "Model", pr_camera: "Kamera", pr_layer: "Warstwa", pr_nozzle: "Dysza", pr_bed: "Stół",
+    pr_ends: (t) => `koniec ${t}`, pr_left: "do końca", pr_pause: "Pauza", pr_resume: "Wznów", pr_stop: "Stop",
+    pr_stop_confirm: "Przerwać wydruk? Tego nie da się cofnąć.", pr_printing: (p) => `Drukuje ${p}%`, pr_failed: "Wydruk nieudany!",
+    pr_done: "Wydruk gotowy", pr_light: "Oświetlenie komory", pr_empty: "pusty",
+    pr_status: { running: "Drukuje", pause: "Pauza", finish: "Gotowe", failed: "Błąd", idle: "Bezczynna", prepare: "Przygotowanie", slicing: "Przygotowanie pliku", init: "Start", offline: "Offline", unknown: "—" },
+    pr_stage: { heating_hotend: "Nagrzewanie dyszy", heatbed_preheating: "Nagrzewanie stołu", auto_bed_leveling: "Poziomowanie stołu", changing_filament: "Zmiana filamentu", cleaning_nozzle_tip: "Czyszczenie dyszy", homing_toolhead: "Bazowanie", filament_loading: "Ładowanie filamentu", filament_unloading: "Wyładowanie filamentu", inspecting_first_layer: "Kontrola 1. warstwy", calibrating_extrusion_flow: "Kalibracja przepływu", cooling_nozzle: "Chłodzenie dyszy", paused_filament_runout: "Skończył się filament!", paused_nozzle_clog: "Zatkana dysza!", paused_user: "Wstrzymane" },
     tv: "TV", tv_playing: "gra", washing: "Pierze", drying: "Suszy", clean_air: "Czyste", of_lights: "świateł",
   },
 };
@@ -225,6 +237,24 @@ function lhcYaml(v, ind = 0) {
   }).join("\n");
 }
 
+/* czas pozostały (sensor w h / min / s) -> "1 h 12 min" */
+function lhcDuration(st) {
+  if (!st || LHC_BAD.includes(st.state)) return null;
+  let v = Number(st.state);
+  if (!Number.isFinite(v)) return null;
+  const u = (st.attributes.unit_of_measurement || "min").toLowerCase();
+  let m = u === "h" ? v * 60 : u === "s" ? v / 60 : u === "d" ? v * 1440 : v;
+  m = Math.round(m);
+  if (m <= 0) return null;
+  const h = Math.floor(m / 60);
+  return h ? `${h} h ${m % 60} min` : `${m} min`;
+}
+function lhcRemainingMin(st) {
+  if (!st || LHC_BAD.includes(st.state)) return 0;
+  const v = Number(st.state), u = (st.attributes.unit_of_measurement || "min").toLowerCase();
+  return Number.isFinite(v) ? (u === "h" ? v * 60 : u === "s" ? v / 60 : v) : 0;
+}
+
 
 /* ---------- Living House Card – 3D house dashboard ----------
  * type: custom:living-house-card
@@ -246,6 +276,7 @@ const LHC_DEFAULTS = {
   purifier_name: null,
   pm25: null,
   energy: null,          // { power, today, cost, currency }
+  printer: null,         // { status, progress, remaining, page }
   main_thermostat: null,
   heating: [],
   nav: null,
@@ -405,7 +436,8 @@ class LivingHouseCard extends HTMLElement {
   _tracked() {
     if (this._trackedList) return this._trackedList;
     const c = this._cfg, e = this._energy;
-    const ids = new Set([c.weather, c.weather_fallback_temperature, c.sun, c.alarm, c.ventilation, c.purifier, c.pm25, e.power, e.today, e.cost, c.main_thermostat, ...this._allLights]);
+    const pr = c.printer || {};
+    const ids = new Set([pr.status, pr.progress, pr.remaining, c.weather, c.weather_fallback_temperature, c.sun, c.alarm, c.ventilation, c.purifier, c.pm25, e.power, e.today, e.cost, c.main_thermostat, ...this._allLights]);
     this._heatingList.forEach((h) => ids.add(h.entity));
     this._rooms.forEach((r) => {
       [r.temp, r.hum, r.humExtra, r.climateTemp, r.presence, ...(r.heat || []), ...((r.tv && r.tv.ids) || [])].forEach((x) => x && ids.add(x));
@@ -451,6 +483,7 @@ class LivingHouseCard extends HTMLElement {
       const z = Math.min(w / LHC_BASE_W, h / LHC_BASE_H);
       outer.style.height = `${h}px`;
       outer.style.setProperty("--z", z.toFixed(4));
+      requestAnimationFrame(() => this._fitStatus());
     } else {
       outer.style.height = "";
       outer.style.removeProperty("--z");
@@ -704,10 +737,33 @@ class LivingHouseCard extends HTMLElement {
     if (c.ventilation) rows.push(row("mdi:fan", vent && vent.state === "on" ? "#38bdf8" : "#64748b", this._t("ventilation"), vent ? (vent.state === "on" ? this._t("running") : vent.state === "off" ? this._t("off_f") : this._t("no_data")) : "—", `data-more="${lhcEsc(c.ventilation)}"`));
     if (c.alarm) rows.push(row("mdi:shield-check-outline", al ? LHC_ALARM_COLOR[al.state] || "#4ade80" : "#94a3b8", this._t("security"), al ? lhcMap(this._lang, "alarm", al.state, al.state) : this._t("none"), `data-more="${lhcEsc(c.alarm)}"`));
     if (c.pm25) rows.push(row("mdi:leaf", air[1], this._t("air_quality"), air[0], `data-more="${lhcEsc(c.pm25)}"`));
+    if (c.printer && c.printer.status) {
+      const p = c.printer, ps = this._s(p.status), st = ps ? ps.state : "unknown";
+      const prog = Math.round(Number(this._s(p.progress) && this._s(p.progress).state) || 0);
+      const left = lhcDuration(this._s(p.remaining));
+      const val = st === "running" ? `${this._t("pr_printing", prog)}${left ? ` · ${left}` : ""}` : lhcMap(this._lang, "pr_status", st, st);
+      const col = st === "running" ? "#22d3ee" : st === "failed" ? "#f87171" : st === "pause" ? "#facc15" : st === "finish" ? "#4ade80" : "#64748b";
+      const go = p.page && c.rooms_page ? `data-nav="${lhcEsc(c.rooms_page)}#${lhcEsc(p.page)}"` : `data-more="${lhcEsc(p.progress || p.status)}"`;
+      rows.push(row(st === "failed" ? "mdi:printer-3d-nozzle-alert" : "mdi:printer-3d-nozzle", col, p.name || this._t("printer"), val, go));
+    }
     this._el("status").innerHTML = `
       <div class="p-title">${this._t("status_title")}</div>
       <div class="s-head">${this._icon(head[1], `style="color:${head[2]}"`)}<span>${head[0]}</span></div>
       ${rows.join("")}`;
+    this._fitStatus();
+  }
+
+  /* gdy wiersze statusu się nie mieszczą – zagęść je (najpierw odstępy, potem ukryj opisy) */
+  _fitStatus() {
+    const el = this._el("status");
+    if (!el) return;
+    const check = () => {
+      el.classList.remove("tight", "tighter");
+      if (el.scrollHeight - el.clientHeight > 1) el.classList.add("tight");
+      if (el.scrollHeight - el.clientHeight > 1) el.classList.add("tighter");
+    };
+    check();
+    requestAnimationFrame(check);
   }
 
   _renderHeat() {
@@ -1450,8 +1506,8 @@ ha-icon{--mdc-icon-size:20px;display:inline-flex}
 .w-icon ha-icon{--mdc-icon-size:64px;filter:drop-shadow(0 4px 14px rgba(255,220,140,.25));animation:float 6s ease-in-out infinite}
 .w-temp{font-size:42px;font-weight:300;line-height:1;color:#dbe9ff}
 .w-temp span{font-size:26px}
-.w-cond{font-size:14.5px;margin-top:3px}
-.w-loc{font-size:12.5px;color:var(--dim)}
+.w-cond{font-size:14.5px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px}
+.w-loc{font-size:12.5px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px}
 .stale{color:#f59e0b}
 .w-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;font-size:14px}
 .w-grid div{display:flex;align-items:center;gap:7px}
@@ -1687,6 +1743,15 @@ ha-icon{--mdc-icon-size:20px;display:inline-flex}
 .cta ha-icon{--mdc-icon-size:16px}
 .ed-yaml{width:100%;height:160px;resize:vertical;background:rgba(3,7,16,.7);color:#e2e8f0;border:1px solid var(--line);border-radius:10px;padding:8px;font:12px/1.4 ui-monospace,Consolas,monospace}
 .ed-yaml[hidden]{display:none}
+
+/* status: zagęszczanie, gdy brakuje miejsca */
+.status.tight .s-row{padding:4px 6px}
+.status.tight .s-ic{--mdc-icon-size:22px}
+.status.tight .s-name{font-size:13.5px}
+.status.tight .s-val{font-size:12px}
+.status.tight .s-head{padding-bottom:6px}
+.status.tighter .s-val{display:none}
+.status.tighter .s-row{padding:3px 6px}
 `;
 
 if (!customElements.get("living-house-card")) {
@@ -1742,6 +1807,11 @@ class LivingRoomsCard extends HTMLElement {
       };
     });
   }
+  _img(r) {
+    const v = r.image || "";
+    if (/^(camera|image)\./.test(v)) { const st = this._hass && this._hass.states[v]; return st && st.attributes.entity_picture ? st.attributes.entity_picture : ""; }
+    return v;
+  }
   _normDevice(d) {
     if (!d || !d.type) return null;
     const sw = (l) => lhcArr(l).map((x) => (typeof x === "string" ? { entity: x } : x)).filter((x) => x.entity);
@@ -1750,6 +1820,12 @@ class LivingRoomsCard extends HTMLElement {
       case "pet_feeder": case "feeder": return { type: "feeder", status: d.status, manual: d.portions || d.manual, switches: sw(d.switches), name: d.name };
       case "litter_box": case "litter": return { type: "litter", status: d.status, clean: d.clean, switches: sw(d.switches), name: d.name };
       case "washer": return { type: "washer", status: d.status, remaining: d.remaining, temp: d.temperature, name: d.name };
+      case "printer": case "3d_printer": return {
+        type: "printer", name: d.name, status: d.status, stage: d.stage, progress: d.progress, remaining: d.remaining, end_time: d.end_time,
+        layer: d.layer, total_layers: d.total_layers, task: d.task, nozzle: d.nozzle, nozzle_target: d.nozzle_target, bed: d.bed, bed_target: d.bed_target,
+        image: d.image, camera: d.camera, light: d.light, pause: d.pause, resume: d.resume, stop: d.stop,
+        filaments: lhcArr(d.filaments).map((x) => (typeof x === "string" ? x : x && x.entity)).filter(Boolean),
+      };
       case "dryer": return { type: "dryer", status: d.status, remaining: d.remaining, program: d.program, water: d.water_full, filter: d.filter, name: d.name };
       default: return null;
     }
@@ -1772,6 +1848,14 @@ class LivingRoomsCard extends HTMLElement {
     if (!this._ro && window.ResizeObserver) this._ro = new ResizeObserver(() => { const w = this.clientWidth; if (w !== this._lastW && this._root) { this._lastW = w; this._fit(); } });
     if (this._ro) this._ro.observe(this);
     this._clock = setInterval(() => this._renderClock(), 15000);
+    clearInterval(this._camT);
+    this._camT = setInterval(() => {
+      if (!this._view || document.hidden || !this._root) return;
+      this._root.querySelectorAll("img[data-cam]").forEach((im) => {
+        const st = this._hass && this._hass.states[im.dataset.cam];
+        if (st && st.attributes.entity_picture) im.src = `${st.attributes.entity_picture}&_=${Date.now()}`;
+      });
+    }, 8000);
     if (this._root) { this._route(); this._fit(); }
   }
   disconnectedCallback() {
@@ -1781,6 +1865,7 @@ class LivingRoomsCard extends HTMLElement {
     window.removeEventListener("resize", this._onResize);
     if (this._ro) this._ro.disconnect();
     clearInterval(this._clock);
+    clearInterval(this._camT);
   }
 
   set hass(h) {
@@ -1807,6 +1892,7 @@ class LivingRoomsCard extends HTMLElement {
     r.sensors.forEach((s) => ids.push(s[0]));
     r.devices.forEach((d) => Object.entries(d).forEach(([k, v]) => {
       if (k === "switches") v.forEach((x) => ids.push(x.entity));
+      else if (k === "filaments") v.forEach((x) => ids.push(x));
       else if (!["type", "name"].includes(k)) ids.push(v);
     }));
     return ids.filter(Boolean);
@@ -1842,6 +1928,7 @@ class LivingRoomsCard extends HTMLElement {
     r.devices.forEach((d) => {
       if (d.type === "dryer" && this._on(d.water)) out.push(["mdi:cup-water", this._t("waterbox_full"), "warn"]);
       if (d.type === "washer" && this._s(d.status)?.state === "alarm") out.push(["mdi:alert", this._t("washer_alarm"), "bad"]);
+      if (d.type === "printer" && this._s(d.status)?.state === "failed") out.push(["mdi:printer-3d-nozzle-alert", this._t("pr_failed"), "bad"]);
     });
     return out;
   }
@@ -1901,7 +1988,7 @@ class LivingRoomsCard extends HTMLElement {
       <div class="bento" style="--rows:${rows}">
         ${this._rooms.map((r, i) => `
           <article class="tile t-${r.id} sz-${sizes[i]} rise" style="--d:${i + 1};--acc:${r.accent}" data-open="${r.id}">
-            <div class="t-img" style="${r.image ? `background-image:url('${lhcEsc(r.image)}')` : ""}"></div>
+            <div class="t-img" style="${this._img(r) ? `background-image:url('${lhcEsc(this._img(r))}')` : ""}"></div>
             <div class="t-shade"></div><div class="t-glare"></div>
             <div class="t-top">
               <span class="t-ic glass">${this._icon(r.icon)}</span>
@@ -1953,6 +2040,12 @@ class LivingRoomsCard extends HTMLElement {
       r.devices.forEach((d) => {
         if (d.type === "washer" && this._s(d.status)?.state === "running") chips.push(`<span class="chip">${this._icon("mdi:washing-machine", 'class="violet spin"')}${this._t("washing")}</span>`);
         if (d.type === "dryer" && this._s(d.status)?.state === "running") chips.push(`<span class="chip">${this._icon("mdi:tumble-dryer", 'class="violet spin"')}${this._t("drying")}</span>`);
+        if (d.type === "printer") {
+          const pst = this._s(d.status), st = pst && pst.state, pr = Math.round(Number(this._s(d.progress)?.state) || 0);
+          if (st === "running" || st === "prepare") chips.push(`<span class="chip pr">${this._icon("mdi:printer-3d-nozzle", 'class="cyan pulse-ic"')}${this._t("pr_printing", pr)}</span>`);
+          if (st === "pause") chips.push(`<span class="chip">${this._icon("mdi:pause-circle-outline", 'class="amber"')}${this._m("pr_status", "pause")}</span>`);
+          if (st === "finish" && Date.now() - new Date(pst.last_changed).getTime() < 6 * 3600e3) chips.push(`<span class="chip">${this._icon("mdi:check-circle-outline", 'class="green"')}${this._t("pr_done")}</span>`);
+        }
         if (d.type === "purifier" && this._on(d.fan)) chips.push(`<span class="chip">${this._icon("mdi:air-purifier", 'class="green"')}${this._t("clean_air")}</span>`);
       });
       t.querySelector('[data-k="chips"]').innerHTML = chips.join("");
@@ -2030,16 +2123,16 @@ class LivingRoomsCard extends HTMLElement {
     room.hidden = false;
     hub.hidden = true;
     hub.classList.remove("back-in");
-    this._el("bgimg").style.backgroundImage = r.image ? `url('${lhcEsc(r.image)}')` : "";
+    this._el("bgimg").style.backgroundImage = this._img(r) ? `url('${lhcEsc(this._img(r))}')` : "";
     if (!this._isFit()) window.scrollTo({ top: 0 });
     room.classList.remove("enter", "slide-l", "slide-r");
     void room.offsetWidth;
     const hero = room.querySelector(".hero-img");
-    if (startRect && hero && r.image && !(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches)) {
+    if (startRect && hero && this._img(r) && !(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches)) {
       const end = hero.getBoundingClientRect();
       const ghost = document.createElement("div");
       ghost.className = "ghost";
-      ghost.style.backgroundImage = `url('${lhcEsc(r.image)}')`;
+      ghost.style.backgroundImage = `url('${lhcEsc(this._img(r))}')`;
       this._root.querySelector(".page").appendChild(ghost);
       room.classList.add("enter-flip");
       const anim = ghost.animate([
@@ -2107,7 +2200,7 @@ class LivingRoomsCard extends HTMLElement {
       chart: sec("chart", this._t("sec_chart"), "mdi:chart-bell-curve-cumulative", r.temp || r.hum ? `<div class="chart glass" id="chart"><div class="muted pad">${this._t("loading_history")}</div></div>` : ""),
     };
     let A = ["chart"], B = ["lights", "climate"], C = ["media", "devices", "sensors"];
-    if (!S.lights && !S.climate) { B = ["devices"]; C = ["media", "sensors"]; }
+    if (!S.climate && S.devices) { B = ["lights", "devices"]; C = ["media", "sensors"]; }
     if (!S.chart) { A = ["sensors"]; B = B.filter((k) => k !== "sensors"); C = C.filter((k) => k !== "sensors"); }
     const col = (keys) => keys.map((k) => S[k]).join("");
     const cC = col(C);
@@ -2121,7 +2214,7 @@ class LivingRoomsCard extends HTMLElement {
       <div class="rgrid ${cC ? "" : "two"}">
         <div class="col colA">
           <div class="hero" style="--acc:${r.accent};order:0">
-            <div class="hero-img" style="${r.image ? `background-image:url('${lhcEsc(r.image)}')` : ""}"></div>
+            <div class="hero-img" style="${this._img(r) ? `background-image:url('${lhcEsc(this._img(r))}')` : ""}"></div>
             <div class="hero-shade"></div>
             <div class="hero-body">
               <div class="hero-ic">${this._icon(r.icon)}</div>
@@ -2376,6 +2469,7 @@ class LivingRoomsCard extends HTMLElement {
           ${d.switches.length ? `<div class="toggles">${sws(d.switches)}</div>` : ""}
         </div>`;
     }
+    if (d.type === "printer") return this._wPrinter(d);
     if (d.type === "washer" || d.type === "dryer") {
       const washer = d.type === "washer";
       const s = this._s(d.status);
@@ -2392,6 +2486,71 @@ class LivingRoomsCard extends HTMLElement {
         </div>`;
     }
     return "";
+  }
+
+  _wPrinter(d) {
+    const S = (id) => (id ? this._s(id) : undefined);
+    const st = (S(d.status) && S(d.status).state) || "unknown";
+    const avail = !!S(d.status) && !LHC_BAD.includes(st) && st !== "offline";
+    const active = ["running", "prepare", "pause", "init", "slicing"].includes(st);
+    const pr = Math.max(0, Math.min(100, Number(S(d.progress) && S(d.progress).state) || 0));
+    const left = lhcDuration(S(d.remaining));
+    const tz = this._hass.config.time_zone, loc = this._lang === "pl" ? "pl-PL" : undefined;
+    let ends = "";
+    try {
+      const et = S(d.end_time);
+      if (et && !LHC_BAD.includes(et.state)) ends = new Date(et.state).toLocaleTimeString(loc, { hour: "2-digit", minute: "2-digit", timeZone: tz });
+      else if (active && lhcRemainingMin(S(d.remaining)) > 0) ends = new Date(Date.now() + lhcRemainingMin(S(d.remaining)) * 60000).toLocaleTimeString(loc, { hour: "2-digit", minute: "2-digit", timeZone: tz });
+    } catch (e) { ends = ""; }
+    const stage = S(d.stage) && S(d.stage).state;
+    const stageTxt = active && stage && !["printing", "idle", "unknown", "offline"].includes(stage) ? this._m("pr_stage", stage, stage.replace(/_/g, " ")) : "";
+    const pic = (id) => (S(id) && S(id).attributes.entity_picture) || "";
+    const camPic = pic(d.camera), modelPic = pic(d.image);
+    const view = this._prView || (st === "running" && camPic ? "camera" : "model");
+    const showCam = view === "camera" && !!camPic;
+    const imgSrc = showCam ? `${camPic}&_=${Math.floor(Date.now() / 8000)}` : modelPic || camPic;
+    const R = 52, C = 2 * Math.PI * R;
+    const temp = (cur, tgt, label, icon) => {
+      if (!d[cur]) return "";
+      const c = this._num(S(d[cur]) && S(d[cur]).state, 0);
+      const t = d[tgt] ? this._num(S(d[tgt]) && S(d[tgt]).state, 0) : null;
+      return `<div class="pr-temp ${Number(c) > 45 ? "hot" : ""}">${this._icon(icon)}<span>${label}</span><b>${c}°</b>${t && t !== "0" && t !== "—" ? `<small>/ ${t}°</small>` : ""}</div>`;
+    };
+    const fil = d.filaments.map((id) => {
+      const f = S(id);
+      if (!f) return "";
+      const a = f.attributes, empty = a.empty || f.state === "Empty";
+      const col = String(a.color || "#000000").slice(0, 7);
+      return `<div class="fil ${a.active ? "on" : ""} ${empty ? "empty" : ""}" title="${lhcEsc(f.state)}"><i style="background:${empty ? "transparent" : col}"></i><span>${empty ? this._t("pr_empty") : lhcEsc(a.type || f.state)}</span></div>`;
+    }).join("");
+    const btn = (id, icon, label, cls = "") => (id && S(id) && S(id).state !== "unavailable" ? `<button class="mchip ${cls}" data-press="${lhcEsc(id)}" ${cls === "danger" ? 'data-confirm="1"' : ""}>${this._icon(icon)}${label}</button>` : "");
+    const light = S(d.light);
+    const task = S(d.task);
+    return `
+      <div class="dev glass printer ${active ? "printing" : ""} ${st === "failed" ? "failed" : ""} ${!avail ? "is-off" : ""}">
+        <div class="dev-hd">${this._icon("mdi:printer-3d-nozzle", `class="dev-ic ${st === "running" ? "pulse-ic" : ""}"`)}<div><div class="dev-name">${lhcEsc(d.name || this._t("printer"))}</div>
+          <div class="dev-sub">${this._m("pr_status", st, lhcEsc(st))}${stageTxt ? ` · ${lhcEsc(stageTxt)}` : ""}</div></div>
+          ${light ? `<button class="power ${light.state === "on" ? "on" : ""}" data-toggle="${lhcEsc(d.light)}" title="${this._t("pr_light")}">${this._icon(light.state === "on" ? "mdi:lightbulb-on" : "mdi:lightbulb-outline")}</button>` : ""}
+        </div>
+        <div class="pr-body">
+          <div class="pr-media">
+            ${imgSrc ? `<img src="${lhcEsc(imgSrc)}" alt="" ${showCam ? `data-cam="${lhcEsc(d.camera)}"` : ""} class="${showCam ? "cam" : "model"}">` : `<div class="pr-noimg">${this._icon("mdi:cube-outline")}</div>`}
+            ${camPic && modelPic ? `<div class="pr-tabs"><button class="${!showCam ? "on" : ""}" data-prview="model">${this._t("pr_model")}</button><button class="${showCam ? "on" : ""}" data-prview="camera"><i class="live-dot"></i>${this._t("pr_camera")}</button></div>` : ""}
+          </div>
+          <div class="pr-ring">
+            <svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="${R}" class="pr-track"/><circle cx="60" cy="60" r="${R}" class="pr-fill" style="stroke-dasharray:${C.toFixed(1)};stroke-dashoffset:${(C * (1 - pr / 100)).toFixed(1)}"/></svg>
+            <div class="pr-c"><b>${active || st === "finish" ? Math.round(pr) : "—"}<small>%</small></b>${left && active ? `<span>${left}</span>` : ""}</div>
+          </div>
+        </div>
+        ${task && !LHC_BAD.includes(task.state) ? `<div class="pr-task">${this._icon("mdi:file-cad-box")}<span>${lhcEsc(task.state.replace(/\.(stl|3mf|gcode)$/i, "").replace(/_/g, " "))}</span></div>` : ""}
+        <div class="pr-meta">
+          ${d.layer && d.total_layers ? `<div>${this._icon("mdi:layers-triple-outline")}<span>${this._t("pr_layer")}</span><b>${this._num(S(d.layer) && S(d.layer).state, 0)} / ${this._num(S(d.total_layers) && S(d.total_layers).state, 0)}</b></div>` : ""}
+          ${ends && active ? `<div>${this._icon("mdi:flag-checkered")}<span>${this._t("pr_ends", ends)}</span></div>` : ""}
+        </div>
+        <div class="pr-temps">${temp("nozzle", "nozzle_target", this._t("pr_nozzle"), "mdi:printer-3d-nozzle-heat-outline")}${temp("bed", "bed_target", this._t("pr_bed"), "mdi:radiator")}</div>
+        ${fil ? `<div class="fils">${fil}</div>` : ""}
+        ${active ? `<div class="mchips pr-ctl">${st === "pause" ? btn(d.resume, "mdi:play", this._t("pr_resume")) : btn(d.pause, "mdi:pause", this._t("pr_pause"))}${btn(d.stop, "mdi:stop", this._t("pr_stop"), "danger")}</div>` : ""}
+      </div>`;
   }
 
   /* ---------- historia 24h ---------- */
@@ -2453,11 +2612,20 @@ class LivingRoomsCard extends HTMLElement {
   _click(e) {
     const path = e.composedPath();
     const stop = path.indexOf(this._root);
-    const keys = ["open", "nav", "hub", "goto", "toggle", "roomlights", "rgb", "kelvin", "hvac", "tstep", "media", "mpower", "preset", "portion", "feed", "clean", "more"];
+    const keys = ["prview", "press", "open", "nav", "hub", "goto", "toggle", "roomlights", "rgb", "kelvin", "hvac", "tstep", "media", "mpower", "preset", "portion", "feed", "clean", "more"];
     const t = (stop >= 0 ? path.slice(0, stop) : path).find((n) => n.dataset && Object.keys(n.dataset).some((k) => keys.includes(k)));
     if (!t || t.tagName === "INPUT") return;
     const d = t.dataset;
     e.stopPropagation();
+    if (d.prview) {
+      this._prView = d.prview;
+      (this._widgets || []).filter((w) => w.key.startsWith("d:")).forEach((w) => this._rerender(w.key));
+      return;
+    }
+    if (d.press) {
+      if (d.confirm && !confirm(this._t("pr_stop_confirm"))) return;
+      return this._call("button", "press", { entity_id: d.press });
+    }
     if (d.roomlights) {
       const r = this._rooms.find((x) => x.id === d.roomlights);
       const ids = r.lights.filter((l) => l[3] !== "fan" && this._ok(l[0])).map((l) => l[0]);
@@ -2897,6 +3065,52 @@ h2{font-size:clamp(34px,5vw,58px);font-weight:700;letter-spacing:-.02em;line-hei
 .page.fit .sgrid{grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
 .page.fit .sens{padding:10px 12px}
 .page.fit .colA .sgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+
+/* ---------- drukarka 3D ---------- */
+.cyan{color:#22d3ee}
+.pulse-ic{animation:pulse 1.6s ease-in-out infinite}
+.chip.pr{border-color:rgba(34,211,238,.6)}
+.dev.printer.printing{border-color:rgba(34,211,238,.5);box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 0 30px rgba(34,211,238,.18)}
+.dev.printer.failed{border-color:rgba(248,113,113,.8);animation:alarm 1.4s infinite}
+.dev.printer .dev-ic{color:#67e8f9}
+.pr-body{display:flex;gap:14px;align-items:center}
+.pr-media{position:relative;flex:1;min-width:0;aspect-ratio:16/10;max-height:300px;border-radius:16px;overflow:hidden;background:rgba(2,6,16,.6);border:1px solid var(--line)}
+.pr-media img{width:100%;height:100%;display:block}
+.pr-media img.model{object-fit:contain;padding:6px;filter:drop-shadow(0 6px 14px rgba(0,0,0,.6))}
+.pr-media img.cam{object-fit:cover}
+.pr-noimg{width:100%;height:100%;display:grid;place-items:center;color:#475569}
+.pr-noimg ha-icon{--mdc-icon-size:46px}
+.pr-tabs{position:absolute;left:8px;bottom:8px;display:flex;gap:4px;padding:3px;border-radius:999px;background:rgba(4,8,20,.7);backdrop-filter:blur(8px)}
+.pr-tabs button{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;font-size:11.5px;color:#cbd5e1}
+.pr-tabs button.on{background:rgba(34,211,238,.25);color:#fff}
+.live-dot{width:7px;height:7px;border-radius:50%;background:#f43f5e;box-shadow:0 0 6px #f43f5e;animation:blink 1.4s infinite}
+.pr-ring{position:relative;width:128px;height:128px;flex:none}
+.pr-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.pr-track{fill:none;stroke:rgba(255,255,255,.08);stroke-width:10}
+.pr-fill{fill:none;stroke:#22d3ee;stroke-width:10;stroke-linecap:round;transition:stroke-dashoffset 1s ease;filter:drop-shadow(0 0 6px rgba(34,211,238,.7))}
+.printer.printing .pr-fill{animation:prglow 2.4s ease-in-out infinite}
+.pr-c{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.pr-c b{font-size:30px;font-weight:600;line-height:1}.pr-c b small{font-size:15px;color:var(--dim)}
+.pr-c span{font-size:12px;color:#a5f3fc;margin-top:4px}
+.pr-task{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pr-task ha-icon{--mdc-icon-size:18px;color:#67e8f9;flex:none}
+.pr-task span{overflow:hidden;text-overflow:ellipsis}
+.pr-meta,.pr-temps{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--dim)}
+.pr-meta>div,.pr-temp{display:flex;align-items:center;gap:6px}
+.pr-meta ha-icon,.pr-temp ha-icon{--mdc-icon-size:17px}
+.pr-meta b,.pr-temp b{color:var(--txt);font-weight:600}
+.pr-temp small{color:var(--dim)}
+.pr-temp.hot ha-icon{color:#fb923c}
+.fils{display:flex;gap:8px;flex-wrap:wrap}
+.fil{display:flex;align-items:center;gap:6px;padding:4px 10px 4px 5px;border-radius:999px;font-size:12px;border:1px solid var(--line);background:rgba(255,255,255,.04)}
+.fil i{width:16px;height:16px;border-radius:50%;box-shadow:inset 0 0 0 2px rgba(255,255,255,.25)}
+.fil.empty{opacity:.45}.fil.empty i{box-shadow:inset 0 0 0 2px rgba(255,255,255,.2);background:repeating-linear-gradient(45deg,transparent 0 3px,rgba(255,255,255,.15) 3px 5px)!important}
+.fil.on{border-color:#22d3ee;box-shadow:0 0 10px rgba(34,211,238,.4)}
+.mchip.danger{border-color:rgba(248,113,113,.55);color:#fecaca}
+.mchip.danger:hover{background:rgba(248,113,113,.15)}
+.page.fit .pr-ring{width:110px;height:110px}
+.page.fit .pr-media{aspect-ratio:16/9;max-height:230px}
+@keyframes prglow{50%{filter:drop-shadow(0 0 12px rgba(34,211,238,1))}}
 `;
 
 if (!customElements.get("living-rooms-card")) {
@@ -2906,5 +3120,5 @@ if (!customElements.get("living-rooms-card")) {
 }
 
 
-console.info("%c LIVING-HOUSE-CARD %c v0.1.0 ", "background:#2563eb;color:#fff;border-radius:4px 0 0 4px", "background:#0f172a;color:#93c5fd;border-radius:0 4px 4px 0");
+console.info("%c LIVING-HOUSE-CARD %c v0.2.2 ", "background:#2563eb;color:#fff;border-radius:4px 0 0 4px", "background:#0f172a;color:#93c5fd;border-radius:0 4px 4px 0");
 })();

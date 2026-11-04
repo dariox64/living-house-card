@@ -27,7 +27,7 @@
 
 ### Karta pomieszczeń
 
-Druga karta, **`living-rooms-card`**, to mozaika dużych kafelków ze zdjęciami pokoi. Klik – zdjęcie płynnie rozrasta się w pełny widok pokoju: światła (jasność, kolory, barwa), okrągłe pokrętła termostatów, multimedia z okładką, czujniki, wykres 24 h oraz urządzenia: oczyszczacz, karmnik, kuweta, pralka, suszarka.
+Druga karta, **`living-rooms-card`**, to mozaika dużych kafelków ze zdjęciami pokoi. Klik – zdjęcie płynnie rozrasta się w pełny widok pokoju: światła (jasność, kolory, barwa), okrągłe pokrętła termostatów, multimedia z okładką, czujniki, wykres 24 h oraz urządzenia: oczyszczacz, karmnik, kuweta, pralka, suszarka i **drukarka 3D** (pierścień postępu, kamera na żywo, kolory filamentów z AMS, pauza/stop).
 
 | Pomieszczenia | Widok pokoju |
 |---|---|
