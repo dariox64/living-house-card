@@ -2,7 +2,7 @@
 
 **Żywy dashboard domu 3D dla Home Assistant.** Twój dom jako izometryczny obraz 3D, który reaguje na żywo: pokój ciemnieje, gdy zgasisz światło, telewizory świecą, taśmy LED barwią pokój swoim kolorem, niebo zmienia się ze słońcem i pogodą – a każdy pokój otwiera piękny widok sterowania.
 
-[🇬🇧 English](README.md) · [Konfiguracja](docs/configuration.md) · [Kalibracja](docs/calibration.md) · [Własny dom 3D](docs/house-image.md)
+**[▶ Demo na żywo](https://krystianokris.github.io/living-house-card/demo/)** · [🇬🇧 English](README.md) · [Konfiguracja](docs/configuration.md) · [Kalibracja](docs/calibration.md) · [Własny dom 3D](docs/house-image.md)
 
 ![Living House Card – noc](images/house-night.webp)
 
@@ -34,6 +34,12 @@ Druga karta, **`living-rooms-card`**, to mozaika dużych kafelków ze zdjęciami
 | ![Pomieszczenia](images/rooms-hub.webp) | ![Pokój](images/room-view.webp) |
 
 ## 🚀 Wypróbuj bez Home Assistant
+
+### 👉 [Otwórz demo na żywo](https://krystianokris.github.io/living-house-card/demo/)
+
+Udawane urządzenia, wszystko da się klikać – światła, pokoje, przełącznik PL/EN i dzień/noc (przyciski w prawym dolnym rogu).
+
+Albo uruchom lokalnie:
 
 ```bash
 git clone https://github.com/krystianokris/living-house-card.git

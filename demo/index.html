@@ -84,6 +84,9 @@ const p = qs();
 if (p.get("lang")) { hass.language = p.get("lang"); hass.locale = { language: p.get("lang") }; }
 if (p.get("day")) setState("sun.sun", { attributes: { elevation: 30 } });
 if (p.get("rain")) setState("weather.home", { state: "rainy" });
+if (p.get("clean")) document.querySelector(".bar").style.display = "none";
+if (p.get("dark")) Object.keys(states).filter((k) => k.startsWith("light.")).forEach((k) => setState(k, { state: "off" }));
+if (p.get("tvoff")) Object.keys(states).filter((k) => k.startsWith("media_player.")).forEach((k) => setState(k, { state: "off" }));
 try { localStorage.setItem("lhc-heatmap", p.get("heatmap") ? "1" : "0"); localStorage.setItem("lhc-dn", "auto"); } catch (e) {}
 mount();
 if (p.get("zoom")) setTimeout(() => card._openRoom && card._openRoom(p.get("zoom")), 900);

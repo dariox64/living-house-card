@@ -2,7 +2,7 @@
 
 **A living 3D house dashboard for Home Assistant.** Your home as an isometric 3D picture that reacts in real time: rooms go dark when you switch the lights off, TVs glow, LED strips tint the room in their colour, the sky follows the sun and the weather – and every room opens into a beautiful control view.
 
-[🇵🇱 Polska wersja](README.pl.md) · [Configuration](docs/configuration.md) · [Calibration](docs/calibration.md) · [Make your own 3D house](docs/house-image.md)
+**[▶ Live demo](https://krystianokris.github.io/living-house-card/demo/)** · [🇵🇱 Polska wersja](README.pl.md) · [Configuration](docs/configuration.md) · [Calibration](docs/calibration.md) · [Make your own 3D house](docs/house-image.md)
 
 ![Living House Card – night](images/house-night.webp)
 
@@ -39,7 +39,11 @@ A second card, **`living-rooms-card`**, turns your rooms into a mosaic of big ph
 
 ## 🚀 Try it without Home Assistant
 
-Clone the repo and open the interactive demo (fake devices, everything is clickable):
+### 👉 [Open the live demo](https://krystianokris.github.io/living-house-card/demo/)
+
+Fake devices, everything is clickable – switch lights, open rooms, change PL/EN and day/night (buttons in the bottom-right corner).
+
+Or run it locally:
 
 ```bash
 git clone https://github.com/krystianokris/living-house-card.git
