@@ -1,0 +1,7 @@
+# Private files of the author's home – never commit
+private/
+
+node_modules/
+*.log
+.DS_Store
+Thumbs.db

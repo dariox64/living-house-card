@@ -1,0 +1,63 @@
+# Dashboard: "Rooms" (hidden from the sidebar) – view type: Panel, path: rooms
+type: custom:living-rooms-card
+home_path: /my-home/home
+rooms:
+  - id: living
+    name: Living room
+    icon: mdi:sofa-outline
+    image: /local/living-house/rooms/living.webp
+    accent: "#f59e0b"
+    size: big
+    subtitle: Warm light. Good rest.
+    temperature: sensor.living_room_temperature
+    humidity: sensor.living_room_humidity
+    lights:
+      - entity: light.living_room_ceiling
+        icon: mdi:ceiling-light-outline
+      - entity: light.living_room_led
+        name: LED strip
+        icon: mdi:led-strip-variant
+    climate:
+      - entity: climate.living_room
+        type: main
+    media:
+      - entity: media_player.living_room_tv
+    devices:
+      - type: purifier
+        entity: fan.air_purifier
+        pm25: sensor.air_purifier_pm25
+  - id: kitchen
+    name: Kitchen
+    icon: mdi:countertop-outline
+    image: /local/living-house/rooms/kitchen.webp
+    accent: "#34d399"
+    size: wide
+    temperature: sensor.kitchen_temperature
+    lights: [light.kitchen_ceiling, light.kitchen_led]
+    sensors:
+      - binary_sensor.kitchen_window
+      - binary_sensor.kitchen_leak
+  - id: bedroom
+    name: Bedroom
+    icon: mdi:bed-king-outline
+    image: /local/living-house/rooms/bedroom.webp
+    accent: "#f472b6"
+    temperature: climate.bedroom_ac
+    lights: [light.bedroom_ceiling, light.bedroom_led]
+    climate:
+      - entity: climate.bedroom_ac
+        type: ac
+    media:
+      - entity: media_player.bedroom_tv
+  - id: laundry
+    name: Laundry
+    icon: mdi:washing-machine
+    image: /local/living-house/rooms/laundry.webp
+    accent: "#a78bfa"
+    devices:
+      - type: washer
+        status: sensor.washer_status
+        remaining: sensor.washer_remaining_time
+      - type: dryer
+        status: sensor.dryer_phase
+        remaining: sensor.dryer_remaining_time

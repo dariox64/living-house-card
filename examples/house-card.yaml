@@ -1,0 +1,74 @@
+# Dashboard: "Home" – view type: Panel
+type: custom:living-house-card
+image: /local/living-house/house.webp
+title: My Home
+subtitle: Smart Home
+weather: weather.home
+alarm: alarm_control_panel.home
+ventilation: fan.bathroom_extractor
+purifier: fan.air_purifier
+pm25: sensor.air_purifier_pm25
+energy:
+  power: sensor.house_power            # W or kW
+  today: sensor.energy_today           # kWh
+  cost: sensor.energy_cost_today
+  currency: "€"
+main_thermostat: climate.living_room
+heating:
+  - entity: climate.kitchen_trv
+    name: Kitchen TRV
+  - entity: climate.living_room
+    name: Main thermostat
+    icon: mdi:google-circles-extended
+rooms_page: /my-rooms/rooms
+scenes:
+  - name: Night
+    sub: Lights off
+    icon: mdi:bed-outline
+    confirm: Turn off all lights?
+    actions:
+      - action: light.turn_off
+        target: { entity_id: all }
+  - name: Boost
+    sub: +1 °C
+    icon: mdi:fire
+    color: "#fb7a3c"
+    actions:
+      - action: climate.set_temperature
+        target: { entity_id: climate.living_room }
+        data: { temperature: "+1" }
+rooms:
+  - id: upstairs
+    label: true
+    name: Upstairs
+    chip: { x: 2, y: 10, w: 16, h: 7.5 }
+  - id: bedroom
+    name: Bedroom
+    icon: mdi:bed-outline
+    page: bedroom
+    temperature: climate.bedroom_ac
+    lights:
+      - light.bedroom_ceiling
+      - entity: light.bedroom_led
+        weight: 0.4
+    tv:
+      entities: [media_player.bedroom_tv]
+    # chip / shape / focus: use the calibration mode and paste the YAML here
+  - id: kitchen
+    name: Kitchen
+    icon: mdi:chef-hat
+    page: kitchen
+    temperature: sensor.kitchen_temperature
+    humidity: sensor.kitchen_humidity
+    heating: [climate.kitchen_trv]
+    lights: [light.kitchen_ceiling, light.kitchen_led]
+  - id: living
+    name: Living room
+    icon: mdi:lightbulb-outline
+    icon_follows_light: true
+    page: living
+    temperature: sensor.living_room_temperature
+    heating: [climate.living_room]
+    lights: [light.living_room_ceiling, light.living_room_lamp]
+    tv:
+      entities: [media_player.living_room_tv]

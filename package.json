@@ -1,0 +1,17 @@
+{
+  "name": "living-house-card",
+  "version": "0.1.0",
+  "description": "A living 3D house dashboard for Home Assistant – lights, TV glow, weather, day/night, heat map and room views.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "check": "node scripts/build.mjs && node --check dist/living-house-card.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/krystianokris/living-house-card.git"
+  },
+  "keywords": ["home-assistant", "lovelace", "custom-card", "hacs", "dashboard", "3d", "smart-home"],
+  "license": "MIT"
+}

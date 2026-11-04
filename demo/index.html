@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Living House Card – demo</title>
+<style>
+  html,body{margin:0;background:#040913;color:#e2e8f0;font-family:system-ui,sans-serif}
+  .bar{position:fixed;right:12px;bottom:12px;z-index:100;display:flex;gap:6px;font-size:12px}
+  .bar a{color:#cbd5e1;text-decoration:none;padding:6px 10px;border-radius:999px;background:rgba(15,23,42,.8);border:1px solid rgba(255,255,255,.15)}
+</style>
+<!-- Demo only: Home Assistant provides <ha-icon> itself; here we emulate it with Iconify (MDI icons). -->
+<script src="https://cdn.jsdelivr.net/npm/iconify-icon@2.1.0/dist/iconify-icon.min.js"></script>
+<script>
+customElements.define("ha-icon", class extends HTMLElement {
+  static get observedAttributes() { return ["icon"]; }
+  connectedCallback() { this.r(); } attributeChangedCallback() { this.r(); }
+  r() { if (!this.shadowRoot) this.attachShadow({ mode: "open" }); this.shadowRoot.innerHTML = `<iconify-icon icon="${this.getAttribute("icon")}" style="font-size:var(--mdc-icon-size,24px);display:block"></iconify-icon>`; }
+});
+</script>
+<script src="../dist/living-house-card.js"></script>
+<script src="demo-config.js"></script>
+</head>
+<body>
+<div class="bar">
+  <a href="?card=house">3D house</a><a href="?card=rooms">Rooms</a>
+  <a href="#" id="lang">PL / EN</a><a href="#" id="night">Day / night</a>
+</div>
+<script>
+const qs = () => new URLSearchParams(location.search);
+const lang = localStorage.getItem("lhc-demo-lang") || "en";
+const states = JSON.parse(JSON.stringify(window.DEMO_STATES));
+
+/* --- fake hass: services change the fake states, so the demo is clickable --- */
+function setState(id, patch) { const s = states[id] || { state: "off", attributes: {} }; states[id] = { ...s, ...patch, attributes: { ...s.attributes, ...(patch.attributes || {}) } }; }
+function ids(data, target) { const e = (target && target.entity_id) || data.entity_id; return Array.isArray(e) ? e : e ? [e] : []; }
+const hass = {
+  language: lang, locale: { language: lang }, user: { is_admin: true },
+  config: { time_zone: Intl.DateTimeFormat().resolvedOptions().timeZone, location_name: "Demo" },
+  states,
+  async callWS(msg) {
+    const out = {}, now = Date.now() / 1000;
+    (msg.entity_ids || []).forEach((id, k) => {
+      const base = Number(states[id] && states[id].state) || 20;
+      out[id] = Array.from({ length: 160 }, (_, i) => ({ s: String((base + Math.sin(i / 18 + k) * base * 0.08 + Math.random() * base * 0.02).toFixed(1)), lu: now - 86400 + i * 540 }));
+    });
+    return out;
+  },
+  async callService(domain, service, data = {}, target) {
+    for (const id of ids(data, target)) {
+      const s = states[id]; if (!s) continue;
+      if (service === "toggle") setState(id, { state: s.state === "on" ? "off" : "on" });
+      if (service === "turn_on") setState(id, { state: "on", attributes: { brightness: data.brightness_pct ? data.brightness_pct * 2.55 : s.attributes.brightness || 200, rgb_color: data.rgb_color || s.attributes.rgb_color || [255, 200, 140] } });
+      if (service === "turn_off") setState(id, { state: "off" });
+      if (service === "set_temperature") setState(id, { attributes: { temperature: data.temperature } });
+      if (service === "set_hvac_mode") setState(id, { state: data.hvac_mode });
+      if (service === "media_play_pause") setState(id, { state: s.state === "playing" ? "paused" : "playing" });
+      if (service === "set_percentage") setState(id, { attributes: { percentage: data.percentage, preset_mode: null } });
+      if (service === "set_preset_mode") setState(id, { attributes: { preset_mode: data.preset_mode } });
+      if (service === "volume_set") setState(id, { attributes: { volume_level: data.volume_level } });
+    }
+    push();
+  },
+};
+let card;
+function push() { card.hass = { ...hass, states: { ...states } }; }
+function mount() {
+  const which = qs().get("card") === "rooms" ? "rooms" : "house";
+  if (card && card.dataset.which === which) return;
+  if (card) card.remove();
+  card = document.createElement(which === "rooms" ? "living-rooms-card" : "living-house-card");
+  card.dataset.which = which;
+  card.setConfig(which === "rooms" ? window.DEMO_ROOMS : window.DEMO_HOUSE);
+  document.body.prepend(card);
+  push();
+}
+window.addEventListener("location-changed", mount);
+window.addEventListener("popstate", mount);
+document.getElementById("lang").onclick = (e) => { e.preventDefault(); localStorage.setItem("lhc-demo-lang", lang === "en" ? "pl" : "en"); location.reload(); };
+document.getElementById("night").onclick = (e) => { e.preventDefault(); const s = states["sun.sun"]; setState("sun.sun", { attributes: { elevation: s.attributes.elevation > 0 ? -12 : 30 } }); push(); };
+addEventListener("hass-more-info", (e) => console.log("more-info", e.detail.entityId));
+/* parametry do zrzutów: ?day=1 &heatmap=1 &zoom=living &lang=pl */
+const p = qs();
+if (p.get("lang")) { hass.language = p.get("lang"); hass.locale = { language: p.get("lang") }; }
+if (p.get("day")) setState("sun.sun", { attributes: { elevation: 30 } });
+if (p.get("rain")) setState("weather.home", { state: "rainy" });
+try { localStorage.setItem("lhc-heatmap", p.get("heatmap") ? "1" : "0"); localStorage.setItem("lhc-dn", "auto"); } catch (e) {}
+mount();
+if (p.get("zoom")) setTimeout(() => card._openRoom && card._openRoom(p.get("zoom")), 900);
+</script>
+</body>
+</html>
