@@ -125,3 +125,32 @@ window.DEMO_STATES = {
   "sensor.printer_ams_4": S("Empty", { type: "Empty", color: "#00000000", active: false, empty: true }),
   "sensor.washer_status": S("running", { friendly_name: "Washer" }), "sensor.washer_remaining": S("38", { unit_of_measurement: "min" }),
 };
+
+// Extra states for the ready-made houses (presets).
+Object.assign(window.DEMO_STATES, {
+  "light.guest_room": dim(true, "Guest room", 170, [255, 214, 170]), "sensor.guest_room_temperature": S("20.4", { unit_of_measurement: "°C" }),
+  "light.utility_room": light(true, "Utility room"), "sensor.boiler_temperature": S("54.0", { unit_of_measurement: "°C", friendly_name: "Boiler" }),
+  "light.workshop": light(true, "Workshop"), "light.attic_bedroom": dim(true, "Attic bedroom", 150, [255, 200, 150]),
+  "sensor.attic_temperature": S("19.1", { unit_of_measurement: "°C" }), "light.attic_storage": light(false, "Attic storage"),
+});
+
+// Ready-made houses: same entities, positions come from the preset.
+window.DEMO_PRESETS = ["2-bedrooms", "3-bedrooms", "basement", "attic", "3-bedrooms-basement", "3-bedrooms-attic", "basement-attic", "3-bedrooms-basement-attic"];
+window.demoPresetConfig = (preset) => {
+  const keep = ["id", "page", "temperature", "humidity", "humidity_on_chip", "heating", "presence", "lights", "icon_follows_light", "entities"];
+  const rooms = window.DEMO_HOUSE.rooms.filter((r) => !r.label).map((r) => {
+    const o = {}; keep.forEach((k) => { if (r[k] !== undefined) o[k] = r[k]; });
+    if (r.tv) o.tv = { entities: r.tv.entities };
+    return o;
+  });
+  rooms.push(
+    { id: "guest", lights: ["light.guest_room"], temperature: "sensor.guest_room_temperature" },
+    { id: "utility", lights: ["light.utility_room"], temperature: "sensor.boiler_temperature", page: "garage" },
+    { id: "workshop", lights: ["light.workshop"], page: "garage" },
+    { id: "attic_bedroom", lights: ["light.attic_bedroom"], temperature: "sensor.attic_temperature" },
+    { id: "attic_storage", lights: ["light.attic_storage"] },
+  );
+  const { rooms: _r, image: _i, ...rest } = window.DEMO_HOUSE;
+  // Preset rooms not in the picture are ignored; image is local in the demo (HA uses the CDN by default).
+  return { ...rest, preset, image: `../images/houses/${preset}.webp`, rooms };
+};

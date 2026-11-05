@@ -66,7 +66,36 @@ Then open <http://localhost:8000/demo/>.
 2. Copy it to `/config/www/living-house-card/`.
 3. Settings → Dashboards → ⋮ → **Resources** → add `/local/living-house-card/living-house-card.js` as **JavaScript module**.
 
-## 🏁 Quick start
+## 🏠 Pick a ready-made house
+
+No AI, no calibration, no YAML – **Edit dashboard → Add card → Living House Card**, pick a house from the dropdown and click your lights, sensors and TVs for each room. Labels, room outlines and the TV screen are already in place.
+
+| <img src="images/houses/2-bedrooms.webp" width="190"> | <img src="images/houses/3-bedrooms.webp" width="190"> | <img src="images/houses/basement.webp" width="190"> | <img src="images/houses/attic.webp" width="190"> |
+|:---:|:---:|:---:|:---:|
+| `2-bedrooms` | `3-bedrooms` | `basement` | `attic` |
+| <img src="images/houses/3-bedrooms-basement.webp" width="190"> | <img src="images/houses/3-bedrooms-attic.webp" width="190"> | <img src="images/houses/basement-attic.webp" width="160"> | <img src="images/houses/3-bedrooms-basement-attic.webp" width="160"> |
+| `3-bedrooms-basement` | `3-bedrooms-attic` | `basement-attic` | `3-bedrooms-basement-attic` |
+
+Prefer YAML? It works too:
+
+```yaml
+type: custom:living-house-card
+preset: basement          # any name from the table above
+weather: weather.home
+rooms:                    # only the rooms you want to connect – by id
+  - id: living
+    lights: [light.living_room_ceiling]
+    tv: [media_player.living_room_tv]
+  - id: utility
+    name: Boiler room     # rename any room
+    temperature: sensor.boiler_temperature
+  - id: workshop
+    hide: true            # remove a room you don't have
+```
+
+Room ids for every house: **[docs/configuration.md → Ready-made houses](docs/configuration.md#ready-made-houses)**. Try them all in the [live demo](https://krystianokris.github.io/living-house-card/demo/?card=house&house=basement).
+
+## 🏁 Quick start – your own house
 
 1. Put a 3D picture of your home in `/config/www/living-house/house.webp` (see [how to make one](docs/house-image.md)).
 2. Create a dashboard with a **Panel** view and add the card:

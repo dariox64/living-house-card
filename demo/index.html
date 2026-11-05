@@ -7,6 +7,9 @@
 <style>
   html,body{margin:0;background:#040913;color:#e2e8f0;font-family:system-ui,sans-serif}
   .bar{position:fixed;right:12px;bottom:12px;z-index:100;display:flex;gap:6px;font-size:12px}
+  .bar{flex-wrap:wrap;justify-content:flex-end;max-width:calc(100vw - 24px)}
+  .bar a.on{background:rgba(37,99,235,.85);border-color:#60a5fa;color:#fff}
+  #houses{display:contents}
   .bar a{color:#cbd5e1;text-decoration:none;padding:6px 10px;border-radius:999px;background:rgba(15,23,42,.8);border:1px solid rgba(255,255,255,.15)}
 </style>
 <!-- Demo only: Home Assistant provides <ha-icon> itself; here we emulate it with Iconify (MDI icons). -->
@@ -24,6 +27,7 @@ customElements.define("ha-icon", class extends HTMLElement {
 <body>
 <div class="bar">
   <a href="?card=house">3D house</a><a href="?card=rooms">Rooms</a>
+  <span id="houses"></span>
   <a href="#" id="lang">PL / EN</a><a href="#" id="night">Day / night</a>
 </div>
 <script>
@@ -65,12 +69,16 @@ const hass = {
 let card;
 function push() { card.hass = { ...hass, states: { ...states } }; }
 function mount() {
-  const which = qs().get("card") === "rooms" ? "rooms" : "house";
+  const house = qs().get("house") || "";
+  const which = qs().get("card") === "rooms" ? "rooms" : "house:" + house;
   if (card && card.dataset.which === which) return;
   if (card) card.remove();
   card = document.createElement(which === "rooms" ? "living-rooms-card" : "living-house-card");
   card.dataset.which = which;
-  card.setConfig(which === "rooms" ? window.DEMO_ROOMS : window.DEMO_HOUSE);
+  card.setConfig(which === "rooms" ? window.DEMO_ROOMS : house ? window.demoPresetConfig(house) : window.DEMO_HOUSE);
+  const names = { "2-bedrooms": "2 bed", "3-bedrooms": "3 bed", basement: "2 bed + basement", attic: "2 bed + attic", "3-bedrooms-basement": "3 bed + basement", "3-bedrooms-attic": "3 bed + attic", "basement-attic": "2 bed + basement + attic", "3-bedrooms-basement-attic": "3 bed + basement + attic" };
+  document.getElementById("houses").innerHTML = which === "rooms" ? "" : window.DEMO_PRESETS.map((k) =>
+    `<a href="?card=house&house=${k}" class="${(house || "2-bedrooms") === k ? "on" : ""}">${names[k]}</a>`).join("");
   document.body.prepend(card);
   push();
 }

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.0 – Ready-made houses
+
+### New
+- `preset:` option – pick one of 8 ready-made houses (2 or 3 bedrooms, with or without basement and attic) with the picture, labels, room outlines and TV screen already in place. Just add entities to rooms by `id`.
+- Visual editor: pick the house from a dropdown and choose lights, temperature, humidity and TV for each room – no YAML needed.
+- Rooms in a preset can be renamed, re-iconed or removed (`hide: true`); room names follow the UI language (EN/PL).
+- Tall houses are shown bigger: semi-transparent ▲▼ arrows (or mouse wheel / swipe) move the view one floor up or down (`scroll_floors`). Idea: Arkadiusz Piotr Piasecki.
+- Demo: switch between all houses (`?house=basement`).
+
 ## 0.2.2 – 3D printer
 
 ### Fixes

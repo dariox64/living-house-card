@@ -14,7 +14,10 @@ All positions are **percentages of the picture** (0–100), so they work at any 
 
 | Option | Type | Default | Description |
 |---|---|---|---|
-| `image` | string | – | **Required.** Your 3D house picture, e.g. `/local/living-house/house.webp`. |
+| `preset` | string | – | Ready-made house (8 to choose from) – see [Ready-made houses](#ready-made-houses). |
+| `scroll_floors` | `auto` \| `true` \| `false` | `auto` | Tall houses (basement + attic) are shown bigger; ▲▼ arrows, mouse wheel or a swipe move the view one floor up/down. `auto` = when the picture is taller than wide. |
+| `image_base` | string | jsDelivr CDN | Folder with the preset pictures, e.g. `/local/living-house/` (HA without internet). |
+| `image` | string | – | Your 3D house picture, e.g. `/local/living-house/house.webp`. **Required** unless you use `preset`. |
 | `title` / `subtitle` | string | `Living House` / `Smart Home` | Header text. |
 | `language` | `pl` \| `en` | HA language | UI language. |
 | `weather` | entity | – | `weather.*` entity (panel + sky/rain/snow effects). |
@@ -204,6 +207,28 @@ scenes:
     actions:
       - action: script.movie_mode       # or just call your own script
 ```
+
+## Ready-made houses
+
+With `preset:` the card brings the picture and all room positions. In `rooms:` you only list the rooms you want to connect, by `id`, with any room option (`lights`, `temperature`, `tv`, `page`, …). You can also:
+
+- rename a room – `name: Boiler room`, change its `icon`,
+- remove a room you don't have – `hide: true`,
+- add your own room – give it a `chip` (and `shape`), or use the calibration mode,
+- use local copies of the pictures (HA without internet) – download `images/houses/*.webp` to `/config/www/living-house/` and set `image_base: /local/living-house/`. By default the picture loads from the jsDelivr CDN, matching your card version.
+
+| Preset | Floors (labels) | Room ids |
+|---|---|---|
+| `2-bedrooms` | `upstairs`, `downstairs` | `bedroom`, `bathroom`, `storage`, `kids`, `wc`, `hall`, `kitchen`, `living` |
+| `3-bedrooms` | `upstairs`, `downstairs` | `bedroom`, `bathroom`, `kids`, `guest`, `wc`, `hall`, `kitchen`, `living` |
+| `basement` | `upstairs`, `downstairs`, `basement` | `bedroom`, `bathroom`, `kids`, `wc`, `hall`, `kitchen`, `living`, `utility`, `workshop` |
+| `attic` | `attic`, `upstairs`, `downstairs` | `attic_bedroom`, `attic_storage`, `bedroom`, `bathroom`, `kids`, `wc`, `hall`, `kitchen`, `living` |
+| `3-bedrooms-basement` | `upstairs`, `downstairs`, `basement` | `bedroom`, `bathroom`, `kids`, `guest`, `wc`, `hall`, `kitchen`, `living`, `utility`, `workshop` |
+| `3-bedrooms-attic` | `attic`, `upstairs`, `downstairs` | `attic_bedroom`, `attic_storage`, `bedroom`, `bathroom`, `kids`, `guest`, `wc`, `hall`, `kitchen`, `living` |
+| `basement-attic` | `attic`, `upstairs`, `downstairs`, `basement` | `attic_bedroom`, `attic_storage`, `bedroom`, `bathroom`, `kids`, `wc`, `hall`, `kitchen`, `living`, `utility`, `workshop` |
+| `3-bedrooms-basement-attic` | `attic`, `upstairs`, `downstairs`, `basement` | `attic_bedroom`, `attic_storage`, `bedroom`, `bathroom`, `kids`, `guest`, `wc`, `hall`, `kitchen`, `living`, `utility`, `workshop` |
+
+The `living` room has a TV screen in every house – add `tv: [media_player.your_tv]` and it lights up and flickers.
 
 ## Room geometry
 

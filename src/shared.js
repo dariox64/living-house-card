@@ -26,6 +26,7 @@ const lhcPlPlural = (n, one, few, many) => (n === 1 ? one : n % 10 >= 2 && n % 1
 
 const LHC_I18N = {
   en: {
+    floor_up: "Floor up", floor_down: "Floor down",
     nav_home: "Home", nav_rooms: "Rooms", nav_energy: "Energy",
     search: "Search", settings: "Settings", add_scene: "Add scene",
     dn_auto: "Day/night: automatic", dn_day: "Forced day", dn_night: "Forced night",
@@ -93,6 +94,7 @@ const LHC_I18N = {
     tv: "TV", tv_playing: "playing", washing: "Washing", drying: "Drying", clean_air: "Clean air", of_lights: "lights",
   },
   pl: {
+    floor_up: "Piętro wyżej", floor_down: "Piętro niżej",
     nav_home: "Dom", nav_rooms: "Pomieszczenia", nav_energy: "Energia",
     search: "Szukaj", settings: "Ustawienia", add_scene: "Dodaj scenę",
     dn_auto: "Dzień/noc: automatycznie", dn_day: "Wymuszony dzień", dn_night: "Wymuszona noc",

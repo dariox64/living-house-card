@@ -1,8 +1,8 @@
-/*! Living House Card v0.2.2 | MIT License | https://github.com/krystianokris/living-house-card */
+/*! Living House Card v0.3.0 | MIT License | https://github.com/krystianokris/living-house-card */
 (() => {
 "use strict";
 /* ---------- Living House Card – shared helpers ---------- */
-const LHC_VERSION = "0.2.2";
+const LHC_VERSION = "0.3.0";
 const LHC_BAD = ["unknown", "unavailable", undefined, null, ""];
 const LHC_TV_ON = ["on", "playing", "paused", "buffering"];
 
@@ -29,6 +29,7 @@ const lhcPlPlural = (n, one, few, many) => (n === 1 ? one : n % 10 >= 2 && n % 1
 
 const LHC_I18N = {
   en: {
+    floor_up: "Floor up", floor_down: "Floor down",
     nav_home: "Home", nav_rooms: "Rooms", nav_energy: "Energy",
     search: "Search", settings: "Settings", add_scene: "Add scene",
     dn_auto: "Day/night: automatic", dn_day: "Forced day", dn_night: "Forced night",
@@ -96,6 +97,7 @@ const LHC_I18N = {
     tv: "TV", tv_playing: "playing", washing: "Washing", drying: "Drying", clean_air: "Clean air", of_lights: "lights",
   },
   pl: {
+    floor_up: "Piętro wyżej", floor_down: "Piętro niżej",
     nav_home: "Dom", nav_rooms: "Pomieszczenia", nav_energy: "Energia",
     search: "Szukaj", settings: "Ustawienia", add_scene: "Dodaj scenę",
     dn_auto: "Dzień/noc: automatycznie", dn_day: "Wymuszony dzień", dn_night: "Wymuszona noc",
@@ -256,6 +258,59 @@ function lhcRemainingMin(st) {
 }
 
 
+// Ready-made houses: `preset: <name>` gives the image + room positions; the user only adds entities.
+// Geometry: chip [x,y,w,h], shape [[x,y]...], focus [x,y], glow [x,y,w,h], screen [[x,y]x4] – all in % of the image.
+const LHC_PRESETS = {"2-bedrooms":{"rooms":[{"id":"upstairs","label":1,"chip":[2,10,16.2,7.6]},{"id":"downstairs","label":1,"chip":[2,50.1,16.4,7.7]},{"id":"bathroom","chip":[38.6,17.8,17.7,10.1],"shape":[[38,15],[39,9],[50,3.5],[57.5,6.5],[57.5,32],[52,37.5],[44,37.5],[41,30]]},{"id":"storage","chip":[56.3,13,14.9,7.2],"focus":[62,21]},{"id":"bedroom","chip":[17.8,31.5,16.4,10.7],"shape":[[2.5,24],[26,15],[38,15],[41,30],[44,37.5],[24,51],[2.5,43.5]],"glow":[21,30,34,26]},{"id":"kids","chip":[65.1,27.9,19.9,10.7],"shape":[[57.5,6.5],[70,10.5],[91,13.5],[96.5,17.5],[96.5,35.5],[78,44.5],[59,35.5],[57.5,32]]},{"id":"kitchen","chip":[18.8,53.9,17.3,10],"shape":[[55,40.5],[64,43.5],[78.5,45.5],[78,56],[73,62],[62,68.5],[52.5,64.5],[59.5,45]]},{"id":"wc","chip":[13.6,65.1,11.3,10],"shape":[[4.5,60],[18,55],[33,53],[33,66],[25.5,70],[25.5,89],[4.5,82.5]]},{"id":"hall","chip":[33.3,65.4,15,10.1],"shape":[[24,52],[40,45.5],[55,40.5],[59.5,45],[52.5,64.5],[48,72],[44,80],[48.5,88],[40,94],[30.5,88.5],[25.5,89],[25.5,70],[33,66],[33,53]]},{"id":"living","chip":[62.9,72,15.2,10.2],"focus":[71,67],"shape":[[44,80],[48,72],[52.5,64.5],[62,68.5],[73,62],[78,56],[78.5,45.5],[96.5,45],[96.5,76.5],[67,95.5]],"glow":[76,66,40,34],"screen":[[73.7,57.6],[84.3,62.2],[84.3,69.5],[73.7,64.8]]}]},"3-bedrooms":{"rooms":[{"id":"upstairs","label":1,"chip":[1,2,15,9]},{"id":"downstairs","label":1,"chip":[1,45,15,9]},{"id":"bedroom","chip":[12,27,15,13],"shape":[[4,24],[8,17],[29,10],[31,12],[35,36],[28,41],[21,48],[4,42]]},{"id":"bathroom","chip":[36,15,14,13],"shape":[[31,11],[44,6],[50,8],[51,33],[44,36],[36,37],[35,30]]},{"id":"kids","chip":[54,30,15,13],"shape":[[50,7],[58,5],[70,10],[73,36],[66,40],[52,38],[51,34]]},{"id":"guest","chip":[78,31,15,13],"shape":[[71,12],[79,10],[95,17],[95,37],[84,44],[76,42],[73,36]]},{"id":"wc","chip":[11,57,13,13],"shape":[[8,62],[20,54],[29,50],[30,66],[30,86],[23,90],[8,82]]},{"id":"hall","chip":[31,62,12,13],"shape":[[29,51],[36,47],[49,42],[50,58],[44,66],[41,77],[38,88],[30,88],[30,66]]},{"id":"kitchen","chip":[52,46,14,13],"shape":[[49,44],[56,41],[68,44],[68,58],[62,62],[50,59]]},{"id":"living","chip":[60,78,15,13],"shape":[[68,46],[81,45],[82,74],[60,92],[41,77],[44,66],[50,58],[62,62],[68,58]],"screen":[[64,57.5],[73,61.5],[72.5,67.5],[64,64]]}]},"basement":{"rooms":[{"id":"upstairs","label":1,"chip":[0.5,3,13,8]},{"id":"downstairs","label":1,"chip":[0.5,30,13,8]},{"id":"basement","label":1,"chip":[0.5,62,13,8]},{"id":"bedroom","chip":[14,22,14,11],"shape":[[11,19],[18,13],[39,8],[39,32],[33,37],[29,38],[11,33]]},{"id":"bathroom","chip":[41,13,13,11],"shape":[[39,8],[50,5],[57,9],[58,28],[50,30],[39,32]]},{"id":"kids","chip":[68,21,14,11],"shape":[[57,9],[62,10],[86,14],[88,29],[74,35],[58,30]]},{"id":"wc","chip":[15,46,13,11],"shape":[[12,45],[21,41],[35,38],[35,63],[29,66],[12,61]]},{"id":"hall","chip":[36,47,12,11],"shape":[[35,38],[40,33],[55,30],[57,33],[52,46],[45,50],[41,62],[45,66],[35,64]]},{"id":"kitchen","chip":[56,36,13,11],"shape":[[54,34],[65,34],[70,37],[70,46],[62,50],[54,46]]},{"id":"living","chip":[54,58,14,11],"shape":[[70,37],[89,35],[89,59],[68,70],[45,60],[48,55],[62,50],[70,46]],"screen":[[71.5,45],[80,48],[80,53],[71.5,50]]},{"id":"utility","chip":[25,69,14,10],"shape":[[14,68],[48,67],[48,95],[20,96],[14,93]]},{"id":"workshop","chip":[61,68,15,10],"shape":[[50,67],[73,65],[86,63],[87,92],[78,96],[50,95]]}]},"attic":{"rooms":[{"id":"attic","label":1,"chip":[0.5,12,13,8]},{"id":"upstairs","label":1,"chip":[0.5,36,13,8]},{"id":"downstairs","label":1,"chip":[0.5,62,13,8]},{"id":"attic_bedroom","chip":[28,15,14,10],"shape":[[16,27],[34,13],[50,3],[52,3],[52,27],[30,28]]},{"id":"attic_storage","chip":[57,16,15,10],"shape":[[52,3],[66,14],[86,26],[70,27],[52,27]]},{"id":"bedroom","chip":[16,34,14,11],"shape":[[11,31],[30,30],[39,30],[39,49],[28,55],[11,52]]},{"id":"bathroom","chip":[41,31,13,11],"shape":[[39,30],[57,30],[57,46],[50,48],[39,49]]},{"id":"kids","chip":[68,33,14,11],"shape":[[57,30],[89,30],[89,46],[73,53],[58,47]]},{"id":"wc","chip":[16,64,13,11],"shape":[[12,59],[18,57],[35,56],[35,84],[30,86],[12,81]]},{"id":"hall","chip":[37,68,12,11],"shape":[[35,56],[41,57],[55,50],[56,53],[53,64],[46,70],[43,80],[45,88],[35,86]]},{"id":"kitchen","chip":[55,55,13,11],"shape":[[54,54],[66,53],[70,56],[70,64],[64,66],[54,64]]},{"id":"living","chip":[52,82,14,11],"shape":[[70,56],[89,53],[89,79],[68,92],[44,79],[48,72],[64,66],[70,64]],"screen":[[70,63.5],[79,66.5],[79,72],[70,69]]}]},"3-bedrooms-basement":{"rooms":[{"id":"upstairs","label":1,"chip":[0.5,2,13,8]},{"id":"downstairs","label":1,"chip":[0.5,37,13,8]},{"id":"basement","label":1,"chip":[0.5,70,12,8]},{"id":"bedroom","chip":[13,24,14,10.5],"shape":[[5,21],[10,17],[30,13],[35,34],[30,38],[21,45],[5,38]]},{"id":"bathroom","chip":[37,15,13,10.5],"shape":[[30,13],[46,8],[50,10],[51,34],[44,36],[36,35],[35,34]]},{"id":"kids","chip":[55,24,14,10.5],"shape":[[50,9],[52,9],[70,14],[71,35],[64,37],[51,34]]},{"id":"guest","chip":[78,27,14,10.5],"shape":[[70,14],[80,13],[95,20],[95,33],[84,42],[72,39],[71,35]]},{"id":"wc","chip":[12,51,13,10.5],"shape":[[8,50],[17,45],[30,44],[30,71],[22,72],[8,66]]},{"id":"hall","chip":[31,47,12,10.5],"shape":[[30,44],[34,42],[48,39],[49,45],[44,53],[42,60],[41,66],[38,72],[30,72],[30,60]]},{"id":"kitchen","chip":[50,42,13,10.5],"shape":[[47,40],[56,40],[64,42],[64,51],[57,55],[49,54],[48,46]]},{"id":"living","chip":[60,62,14,10.5],"shape":[[64,42],[92,42],[92,63],[86,66],[61,74],[42,68],[42,60],[44,55],[57,56],[64,52]],"screen":[[65.3,49.5],[74.5,53],[74,59],[65,56]]},{"id":"utility","chip":[27,73,14,9],"shape":[[11,72],[47,72],[47,96],[13,96],[11,92]]},{"id":"workshop","chip":[60,73,15,9],"shape":[[47,73],[85,70],[85,95],[78,97],[47,96]]}]},"3-bedrooms-attic":{"rooms":[{"id":"attic","label":1,"chip":[0.5,14,12,8]},{"id":"upstairs","label":1,"chip":[0.5,40,13,8]},{"id":"downstairs","label":1,"chip":[0.5,66,13,8]},{"id":"attic_bedroom","chip":[30,22,14,9.5],"shape":[[13,34],[28,22],[50,4],[51,4],[51,34]]},{"id":"attic_storage","chip":[57,20,14,9.5],"shape":[[51,4],[70,18],[89,34],[51,34]]},{"id":"bedroom","chip":[14,43,14,10.5],"shape":[[6,38],[34,37],[35,55],[30,58],[21,66],[6,59]]},{"id":"bathroom","chip":[36,40,13,10.5],"shape":[[35,37],[50,37],[51,55],[44,57],[36,57],[35,55]]},{"id":"kids","chip":[55,45,14,10.5],"shape":[[50,37],[70,37],[71,57],[64,60],[51,56]]},{"id":"guest","chip":[78,45,14,10.5],"shape":[[70,37],[95,37],[95,57],[84,64],[72,60],[71,57]]},{"id":"wc","chip":[11,72,13,10.5],"shape":[[8,68],[18,66],[30,64],[30,92],[24,96],[8,88]]},{"id":"hall","chip":[30,66,12,10.5],"shape":[[30,64],[34,63],[48,60],[49,66],[44,74],[42,82],[42,90],[36,96],[30,93]]},{"id":"kitchen","chip":[50,61,13,10.5],"shape":[[47,61],[56,61],[64,63],[64,71],[57,75],[49,74],[48,66]]},{"id":"living","chip":[52,80,14,10.5],"shape":[[64,63],[92,63],[92,84],[86,88],[60,99],[42,90],[42,82],[44,75],[57,76],[64,72]],"screen":[[63,70.5],[72,74],[72,81],[63,77.5]]}]},"basement-attic":{"rooms":[{"id":"attic","label":1,"chip":[0.5,9,13,6]},{"id":"upstairs","label":1,"chip":[0.5,29,13,6]},{"id":"downstairs","label":1,"chip":[0.5,51,13,6]},{"id":"basement","label":1,"chip":[0.5,73,13,6]},{"id":"attic_bedroom","chip":[28,16,16,7],"shape":[[3,27],[25,13],[50,3],[50,27]]},{"id":"attic_storage","chip":[58,13,16,7],"shape":[[50,3],[75,14],[97,27],[50,27]]},{"id":"bedroom","chip":[14,37,16,7],"shape":[[5,28],[38,28],[38,44],[33,46],[22,53],[5,47]]},{"id":"bathroom","chip":[42,35,16,7],"shape":[[38,28],[64,28],[64,43],[56,45],[44,46],[38,44]]},{"id":"kids","chip":[72,33,16,7],"shape":[[64,28],[94,28],[94,46],[80,50],[64,44]]},{"id":"wc","chip":[9,58,15,7],"shape":[[5,52],[18,51],[30,50],[30,74],[22,76],[5,70]]},{"id":"hall","chip":[33,54,15,7],"shape":[[30,50],[35,50],[50,47],[50,53],[45,58],[42,62],[42,72],[36,75],[30,74]]},{"id":"kitchen","chip":[51,50,16,7],"shape":[[50,48],[66,50],[70,52],[70,58],[62,60],[52,61],[50,56]]},{"id":"living","chip":[50,66,16,7],"shape":[[70,50],[95,50],[95,70],[66,78],[44,72],[44,63],[52,62],[62,61],[70,59]],"screen":[[72,57.5],[84,60],[84,66.5],[72,64]]},{"id":"utility","chip":[22,76,16,7],"shape":[[6,75],[49,75],[49,95],[13,96],[6,94]]},{"id":"workshop","chip":[60,76,16,7],"shape":[[49,75],[94,74],[94,94],[86,96],[49,95]]}]},"3-bedrooms-basement-attic":{"rooms":[{"id":"attic","label":1,"chip":[0.5,9,13,6]},{"id":"upstairs","label":1,"chip":[0.5,30,13,6]},{"id":"downstairs","label":1,"chip":[0.5,51,13,6]},{"id":"basement","label":1,"chip":[0.5,72,13,6]},{"id":"attic_bedroom","chip":[28,17,16,7],"shape":[[3,28],[25,15],[50,4],[50,28]]},{"id":"attic_storage","chip":[58,13,16,7],"shape":[[50,4],[75,16],[97,28],[50,28]]},{"id":"bedroom","chip":[12,37,16,7],"shape":[[4,30],[36,30],[37,45],[32,47],[22,53],[4,47]]},{"id":"bathroom","chip":[37,33,16,7],"shape":[[36,30],[53,30],[53,44],[46,46],[37,45]]},{"id":"kids","chip":[55,39,16,7],"shape":[[53,30],[72,30],[72,44],[66,47],[54,44]]},{"id":"guest","chip":[78,36,16,7],"shape":[[72,30],[96,30],[96,46],[85,50],[74,47],[72,44]]},{"id":"wc","chip":[9,58,15,7],"shape":[[5,53],[18,52],[29,51],[29,72],[22,74],[5,68]]},{"id":"hall","chip":[32,53,15,7],"shape":[[29,51],[34,50],[50,47],[50,52],[45,57],[42,62],[42,71],[36,74],[29,72]]},{"id":"kitchen","chip":[50,51,16,7],"shape":[[49,49],[64,50],[67,51],[67,57],[60,59],[50,59],[48,54]]},{"id":"living","chip":[48,66,16,7],"shape":[[67,51],[95,49],[95,66],[62,75],[42,70],[42,63],[50,60],[60,60],[67,58]],"screen":[[66,56.5],[75.5,59.5],[75.5,65],[66,62]]},{"id":"utility","chip":[22,75,16,7],"shape":[[6,73],[46,73],[46,95],[11,96],[6,94]]},{"id":"workshop","chip":[60,74,16,7],"shape":[[47,73],[94,72],[94,94],[86,96],[47,95]]}]}};
+const LHC_ROOM_META = {
+  upstairs: ["mdi:stairs-up", "Upstairs", "Piętro"], downstairs: ["mdi:home-floor-0", "Ground floor", "Parter"],
+  basement: ["mdi:home-floor-negative-1", "Basement", "Piwnica"], attic: ["mdi:home-roof", "Attic", "Poddasze"],
+  bedroom: ["mdi:bed-outline", "Bedroom", "Sypialnia"], bathroom: ["mdi:shower-head", "Bathroom", "Łazienka"],
+  kids: ["mdi:teddy-bear", "Kids room", "Pokój dziecka"], guest: ["mdi:bed-queen-outline", "Guest room", "Pokój gościnny"],
+  storage: ["mdi:package-variant-closed", "Storage", "Garderoba"], wc: ["mdi:toilet", "WC", "WC"],
+  hall: ["mdi:walk", "Hall", "Korytarz"], kitchen: ["mdi:chef-hat", "Kitchen", "Kuchnia"], living: ["mdi:sofa-outline", "Living room", "Salon"],
+  utility: ["mdi:water-boiler", "Utility room", "Kotłownia"], workshop: ["mdi:hammer-wrench", "Workshop", "Warsztat"],
+  attic_bedroom: ["mdi:bed-outline", "Bedroom 2", "Sypialnia 2"], attic_storage: ["mdi:archive-outline", "Storage", "Schowek"],
+};
+const LHC_PRESET_CDN = "https://cdn.jsdelivr.net/gh/krystianokris/living-house-card@" + (LHC_VERSION.includes("_") ? "main" : "v" + LHC_VERSION) + "/images/houses/";
+
+// Picture of a preset: own `image`, else `image_base` folder (offline HA), else the CDN.
+function lhcPresetImage(cfg) {
+  if (cfg.image) return cfg.image;
+  const base = cfg.image_base ? String(cfg.image_base).replace(/\/?$/, "/") : LHC_PRESET_CDN;
+  return base + cfg.preset + ".webp";
+}
+
+// Returns a full config: preset rooms (in preset order) merged with the user's rooms by id.
+// User keys win; `hide: true` removes a preset room; unknown ids with their own `chip` are appended as custom rooms.
+function lhcApplyPreset(cfg, lang) {
+  if (!cfg || !cfg.preset) return cfg;
+  const p = LHC_PRESETS[cfg.preset];
+  if (!p) throw new Error(`Unknown preset "${cfg.preset}". Available: ${Object.keys(LHC_PRESETS).join(", ")}`);
+  const pl = lang === "pl" ? 2 : 1;
+  const user = {}; lhcArr(cfg.rooms).forEach((r) => { if (r && r.id) user[String(r.id)] = r; });
+  const rooms = [];
+  p.rooms.forEach((g) => {
+    const u = user[g.id] || {}; delete user[g.id];
+    if (u.hide) return;
+    const m = LHC_ROOM_META[g.id] || ["mdi:home-outline", g.id, g.id];
+    const r = { id: g.id, name: m[pl], icon: m[0], chip: { x: g.chip[0], y: g.chip[1], w: g.chip[2], h: g.chip[3] } };
+    if (g.label) r.label = true;
+    if (g.shape) r.shape = g.shape;
+    if (g.focus) r.focus = { x: g.focus[0], y: g.focus[1] };
+    const o = { ...r, ...u };
+    if (u.tv) {
+      const tv = Array.isArray(u.tv) || typeof u.tv === "string" ? { entities: u.tv } : u.tv;
+      const gl = g.glow ? { x: g.glow[0], y: g.glow[1], w: g.glow[2], h: g.glow[3] } : undefined;
+      o.tv = { ...(gl ? { glow: gl } : {}), ...(g.screen ? { screen: g.screen } : {}), ...tv };
+    }
+    rooms.push(o);
+  });
+  // Extra rooms need their own position (chip) – otherwise they are not in this picture.
+  Object.values(user).forEach((u) => { if (!u.hide && (u.chip || u.x != null)) rooms.push(u); });
+  return { ...cfg, image: lhcPresetImage(cfg), rooms };
+}
+
+
 /* ---------- Living House Card – 3D house dashboard ----------
  * type: custom:living-house-card
  */
@@ -284,6 +339,7 @@ const LHC_DEFAULTS = {
   scenes: [],
   rooms: [],
   fit: true,
+  scroll_floors: "auto", // tall houses: show bigger + ▲▼ floor arrows (auto | true | false)
   tilt: true,
   zoom: 2.1,
   weather_fx: true,
@@ -309,13 +365,15 @@ const LHC_DN = ["auto", "day", "night"];
 const LHC_DN_ICON = { auto: "mdi:theme-light-dark", day: "mdi:weather-sunny", night: "mdi:weather-night" };
 
 class LivingHouseCard extends HTMLElement {
+  static getConfigElement() { return document.createElement("living-house-card-editor"); }
   static getStubConfig() {
-    return { image: "/local/living-house/house.webp", title: "Living House", weather: "weather.home", rooms: [] };
+    return { preset: "2-bedrooms", title: "Living House", weather: "weather.home", rooms: [] };
   }
 
   setConfig(config) {
     if (!config) throw new Error("Invalid configuration");
-    this._cfg = { ...LHC_DEFAULTS, ...config };
+    this._raw = { ...LHC_DEFAULTS, ...config };
+    this._cfg = lhcApplyPreset(this._raw, this._lang || lhcLang(this._hass, this._raw));
     this._normalize();
     this._room = null;
     const ls = (k, d) => { try { return localStorage.getItem(k) || d; } catch (e) { return d; } };
@@ -422,7 +480,11 @@ class LivingHouseCard extends HTMLElement {
     const old = this._hass;
     this._hass = hass;
     const lang = lhcLang(hass, this._cfg);
-    if (lang !== this._lang) { this._lang = lang; if (this._root) this._build(); }
+    if (lang !== this._lang) {
+      this._lang = lang;
+      if (this._raw && this._raw.preset) { this._cfg = lhcApplyPreset(this._raw, lang); this._normalize(); this._trackedList = null; }
+      if (this._root) this._build();
+    }
     if (!this._root) this._build();
     if (!old || this._changed(old, hass)) this._update();
     const now = Date.now();
@@ -488,7 +550,62 @@ class LivingHouseCard extends HTMLElement {
       outer.style.height = "";
       outer.style.removeProperty("--z");
     }
+    this._layoutTall(fit);
     this._applyZoom();
+  }
+
+  /* ---------- tall houses (basement + attic): bigger view, ▲▼ moves one floor ---------- */
+  _layoutTall(fit) {
+    const st = this._el && this._el("stage"), house = st && this._el("house");
+    if (!house) return;
+    const m = this._cfg.scroll_floors;
+    const tall = fit && !this._edit && (m === true || (m !== false && this._ratio && this._ratio < 1.05));
+    st.classList.toggle("tall", !!tall);
+    if (!tall) { house.style.top = ""; this._floors = null; this._panFloor(0); return; }
+    if (!this._wheelOn) this._setupFloorInput(st);
+    requestAnimationFrame(() => {
+      const sh = st.clientHeight, hh = house.offsetHeight, max = Math.max(0, hh - sh);
+      const ys = this._rooms.filter((r) => r.label).map((r) => r.y).sort((a, b) => a - b);
+      let t = ys.length ? ys.map((y) => Math.min(max, Math.max(0, (y / 100) * hh - sh * 0.05)))
+        : Array.from({ length: Math.ceil(max / (sh * 0.6)) + 1 }, (_, i) => Math.min(max, i * sh * 0.6));
+      if (t.length) t[0] = 0; // first stop always shows the roof
+      t = t.filter((v, i) => i === 0 || v - t[i - 1] > 24);
+      if (t.length && max - t[t.length - 1] > 24) t.push(max);
+      this._floors = t.length > 1 ? t : null;
+      this._panFloor(0);
+    });
+  }
+  _panFloor(step) {
+    const st = this._el && this._el("stage"), house = st && this._el("house");
+    if (!house) return;
+    const up = this._el("fup") || st.querySelector(".fnav.up"), dn = st.querySelector(".fnav.down");
+    if (!this._floors) { up.hidden = dn.hidden = true; ["--vtop", "--vh", "--vy"].forEach((k) => house.style.removeProperty(k)); return; }
+    const n = this._floors.length;
+    this._floorIx = Math.max(0, Math.min(n - 1, (this._floorIx || 0) + step));
+    const px = this._floors[this._floorIx], hh = house.offsetHeight, sh = st.clientHeight;
+    this._panPx = px;
+    house.style.top = `${-px}px`;
+    house.style.setProperty("--vtop", `${(px / hh) * 100}%`);
+    house.style.setProperty("--vh", `${(sh / hh) * 100}%`);
+    house.style.setProperty("--vy", `${((px + sh / 2) / hh) * 100}%`);
+    up.hidden = this._floorIx === 0;
+    dn.hidden = this._floorIx === n - 1;
+    if (step && this._room) this._applyZoom();
+  }
+  _setupFloorInput(st) {
+    this._wheelOn = true;
+    let last = 0, y0 = null;
+    const go = (dir) => { const now = Date.now(); if (now - last < 450) return; last = now; this._panFloor(dir); };
+    st.addEventListener("wheel", (e) => {
+      if (!st.classList.contains("tall") || e.ctrlKey || this._room) return;
+      e.preventDefault(); if (Math.abs(e.deltaY) > 4) go(e.deltaY > 0 ? 1 : -1);
+    }, { passive: false });
+    st.addEventListener("touchstart", (e) => { y0 = e.touches[0].clientY; }, { passive: true });
+    st.addEventListener("touchend", (e) => {
+      if (y0 === null || !st.classList.contains("tall")) return;
+      const dy = e.changedTouches[0].clientY - y0; y0 = null;
+      if (Math.abs(dy) > 40) go(dy < 0 ? 1 : -1);
+    }, { passive: true });
   }
 
   /* ---------- szkielet ---------- */
@@ -555,6 +672,8 @@ class LivingHouseCard extends HTMLElement {
               <div class="pop glass" id="pop" hidden></div>
               <div class="edpanel glass" id="edpanel" hidden></div>
             </div>
+            <button class="fnav up glass" data-fnav="-1" hidden title="${this._t("floor_up")}">${this._icon("mdi:chevron-up")}</button>
+            <button class="fnav down glass" data-fnav="1" hidden title="${this._t("floor_down")}">${this._icon("mdi:chevron-down")}</button>
           </main>
 
           <aside class="right">
@@ -570,7 +689,7 @@ class LivingHouseCard extends HTMLElement {
     this._el = (id) => this._root.getElementById(id);
     const im = this._el("himg");
     if (im) {
-      const setRatio = () => { if (im.naturalWidth) this._root.querySelector(".outer").style.setProperty("--ratio", (im.naturalWidth / im.naturalHeight).toFixed(5)); };
+      const setRatio = () => { if (!im.naturalWidth) return; this._ratio = im.naturalWidth / im.naturalHeight; this._root.querySelector(".outer").style.setProperty("--ratio", this._ratio.toFixed(5)); this._fit(); };
       if (im.complete) setRatio(); else im.addEventListener("load", setRatio, { once: true });
     }
     this._setupTilt();
@@ -902,7 +1021,8 @@ class LivingHouseCard extends HTMLElement {
     if (!r) { z.style.transform = ""; return; }
     const f = this._focus(r);
     const fit = this._root.querySelector(".outer").classList.contains("fit");
-    const tx = fit ? 31 : 50, ty = fit ? 50 : 30;
+    const st = this._el("stage"), tall = st && st.classList.contains("tall") && this._floors;
+    const tx = fit ? 31 : 50, ty = tall ? (((this._panPx || 0) + st.clientHeight / 2) / house.offsetHeight) * 100 : fit ? 50 : 30;
     z.style.transformOrigin = `${f.x}% ${f.y}%`;
     z.style.transform = `translate(${tx - f.x}%, ${ty - f.y}%) scale(${this._cfg.zoom})`;
     house.style.setProperty("--sx", `${tx}%`);
@@ -1200,6 +1320,7 @@ class LivingHouseCard extends HTMLElement {
     house.classList.toggle("editing", this._edit);
     this._el("edbtn") && this._el("edbtn").classList.toggle("forced", this._edit);
     const tilt = this._el("tilt"); if (tilt) tilt.style.transform = "";
+    this._fit();
     this._renderHouse();
     this._renderEditor();
   }
@@ -1349,12 +1470,13 @@ class LivingHouseCard extends HTMLElement {
   _click(e) {
     const path = e.composedPath();
     const stop = path.indexOf(this._root);
-    const keys = ["toggle", "more", "nav", "room", "scene", "roomlights", "dn", "heatmap", "wake", "edit", "edsel", "eddraw", "edundo", "eddone", "edcopy", "edclose", "close"];
+    const keys = ["fnav", "toggle", "more", "nav", "room", "scene", "roomlights", "dn", "heatmap", "wake", "edit", "edsel", "eddraw", "edundo", "eddone", "edcopy", "edclose", "close"];
     const t = (stop >= 0 ? path.slice(0, stop) : path).find((n) => n.dataset && Object.keys(n.dataset).some((k) => keys.includes(k)));
     if (!t) return;
     const d = t.dataset;
     e.stopPropagation();
     if (d.wake) return this._hideSaver();
+    if (d.fnav) return this._panFloor(Number(d.fnav));
     if (d.edit || d.edclose) return this._toggleEdit();
     if (this._edit) {
       if (d.edsel) { this._sel = d.edsel; this._draw = null; this._draft = []; this._renderHouse(); return this._renderEditor(); }
@@ -1474,6 +1596,21 @@ ha-icon{--mdc-icon-size:20px;display:inline-flex}
 .outer.fit .stage{container-type:size}
 .house{position:relative;width:100%;max-width:980px;aspect-ratio:var(--ratio,1.11);container-type:inline-size;user-select:none;perspective:1600px}
 .outer.fit .house{width:min(100cqw,calc(100cqh * var(--ratio,1.11)));max-width:none}
+/* tall houses: bigger, the visible window moves floor by floor */
+.outer.fit .stage.tall{overflow:hidden;place-items:start center}
+.outer.fit .stage.tall .house{width:min(100cqw,calc(100cqh * 1.3));top:0;transition:top .6s cubic-bezier(.3,.8,.2,1)}
+.stage.tall .hm-btn{top:calc(var(--vtop,0%) + 1%)}
+.stage.tall .legend{bottom:auto;top:calc(var(--vtop,0%) + var(--vh,100%) - 6%)}
+.stage.tall .pop{top:var(--vy,50%);max-height:calc(var(--vh,100%) * .9)}
+.stage.tall .pop.center{top:calc(var(--vtop,0%) + var(--vh,100%) - 3%);bottom:auto;transform:translate(-50%,-100%)}
+.fnav{position:absolute;z-index:6;width:48px;height:48px;border-radius:50%;display:grid;place-items:center;color:#e0f2fe;cursor:pointer;
+  left:min(calc(50% + min(50cqw, 65cqh) + 14px), calc(100% - 54px));
+  background:rgba(37,99,235,.28);border:1px solid rgba(147,197,253,.55);box-shadow:0 0 18px rgba(59,130,246,.35);opacity:.85;transition:opacity .25s,transform .25s}
+.fnav ha-icon{--mdc-icon-size:30px}
+.fnav:hover{opacity:1;transform:scale(1.1)}
+.fnav.up{top:calc(50% - 56px)}.fnav.down{top:calc(50% + 8px)}
+.fnav[hidden]{visibility:hidden;display:grid}
+.house.zoomed ~ .fnav{opacity:0;pointer-events:none}
 .scenes{grid-area:sc;display:flex;gap:12px;justify-content:center;align-items:center;overflow-x:auto;padding:4px 2px;scrollbar-width:none}
 .scenes::-webkit-scrollbar,.nav::-webkit-scrollbar{display:none}
 
@@ -1757,8 +1894,216 @@ ha-icon{--mdc-icon-size:20px;display:inline-flex}
 if (!customElements.get("living-house-card")) {
   customElements.define("living-house-card", LivingHouseCard);
   window.customCards = window.customCards || [];
-  window.customCards.push({ type: "living-house-card", name: "Living House Card", description: "Living 3D house dashboard: lights, TV glow, weather, day/night, heat map.", preview: false, documentationURL: "https://github.com/krystianokris/living-house-card" });
+  window.customCards.push({ type: "living-house-card", name: "Living House Card", description: "Living 3D house dashboard: lights, TV glow, weather, day/night, heat map.", preview: true, documentationURL: "https://github.com/krystianokris/living-house-card" });
 }
+
+
+/* ---------- Visual editor for living-house-card ----------
+ * Dropdown with ready-made houses + a simple form per room (name, lights, temperature, TV, hide).
+ * Uses Home Assistant's own <ha-form>, so entity pickers look and work like in built-in cards.
+ */
+const LHC_ED_TXT = {
+  en: {
+    house: "House", own: "My own picture (YAML / calibration)", image: "Picture URL", title: "Title", weather: "Weather",
+    main_thermostat: "Main thermostat", heating: "Heating (thermostats / TRVs)", rooms: "Rooms",
+    rooms_hint: "Open a room and pick its lights, temperature sensor and TV. Rooms you don't have – switch on \"Hide\".",
+    own_hint: "With your own picture, rooms and their positions are set in YAML or with the calibration mode (button on the card).",
+    img_warn: "This card has its own picture, so the ready-made house is not shown. Switch to the ready-made house? Your own picture and room positions will be removed from this card (lights and sensors stay).",
+    img_btn: "Use the ready-made house",
+    name: "Name (optional)", lights: "Lights", temperature: "Temperature (sensor or thermostat)", humidity: "Humidity",
+    tv: "TV / media player", hide: "Hide this room", hidden: "hidden", set: "set",
+  },
+  pl: {
+    house: "Dom", own: "Własny obrazek (YAML / kalibracja)", image: "Adres obrazka", title: "Tytuł", weather: "Pogoda",
+    main_thermostat: "Główny termostat", heating: "Ogrzewanie (termostaty / głowice)", rooms: "Pokoje",
+    rooms_hint: "Rozwiń pokój i wybierz jego światła, czujnik temperatury i TV. Pokoje, których nie masz – włącz „Ukryj”.",
+    own_hint: "Przy własnym obrazku pokoje i ich położenie ustawiasz w YAML albo trybem kalibracji (przycisk na karcie).",
+    img_warn: "Ta karta ma własny obrazek, więc gotowy dom nie jest pokazywany. Przełączyć na gotowy dom? Własny obrazek i położenie pokoi zostaną usunięte z tej karty (światła i czujniki zostają).",
+    img_btn: "Użyj gotowego domu",
+    name: "Nazwa (opcjonalnie)", lights: "Światła", temperature: "Temperatura (czujnik lub termostat)", humidity: "Wilgotność",
+    tv: "TV / odtwarzacz", hide: "Ukryj ten pokój", hidden: "ukryty", set: "ustawiony",
+  },
+};
+const LHC_PRESET_NAMES = {
+  "2-bedrooms": ["2 bedrooms", "2 sypialnie"], "3-bedrooms": ["3 bedrooms", "3 sypialnie"],
+  basement: ["2 bedrooms + basement", "2 sypialnie + piwnica"], attic: ["2 bedrooms + attic", "2 sypialnie + poddasze"],
+  "3-bedrooms-basement": ["3 bedrooms + basement", "3 sypialnie + piwnica"], "3-bedrooms-attic": ["3 bedrooms + attic", "3 sypialnie + poddasze"],
+  "basement-attic": ["2 bedrooms + basement + attic", "2 sypialnie + piwnica + poddasze"],
+  "3-bedrooms-basement-attic": ["3 bedrooms + basement + attic", "3 sypialnie + piwnica + poddasze"],
+};
+
+class LivingHouseCardEditor extends HTMLElement {
+  setConfig(config) { this._config = { ...config }; this._render(); }
+  set hass(hass) {
+    this._hass = hass;
+    if (this._root) this._root.querySelectorAll("ha-form").forEach((f) => { f.hass = hass; });
+    else this._render();
+  }
+  connectedCallback() { this._loadHaForm().then(() => this._render(true)); }
+
+  async _loadHaForm() {
+    if (customElements.get("ha-form") && customElements.get("ha-selector")) return;
+    try {
+      const h = window.loadCardHelpers && (await window.loadCardHelpers());
+      if (h) for (const type of ["entities", "tile"]) {
+        const c = await h.createCardElement(type === "tile" ? { type, entity: "sun.sun" } : { type, entities: [] });
+        if (c && c.constructor.getConfigElement) await c.constructor.getConfigElement();
+        if (customElements.get("ha-form")) break;
+      }
+    } catch (e) { /* ignore – fallback message below */ }
+    await Promise.race([customElements.whenDefined("ha-form"), new Promise((r) => setTimeout(r, 3000))]);
+  }
+
+  get _lang() { return lhcLang(this._hass, this._config); }
+  _tx(k) { return (LHC_ED_TXT[this._lang] || LHC_ED_TXT.en)[k] || LHC_ED_TXT.en[k] || k; }
+  _rooms() { return lhcArr(this._config && this._config.rooms); }
+  _user(id) { return this._rooms().find((r) => r && String(r.id) === id) || {}; }
+
+  _render(force) {
+    if (!this._config || !this._hass) return;
+    if (!customElements.get("ha-form")) { if (!this._root) this.innerHTML = "<p>Loading…</p>"; return; }
+    const key = `${this._config.preset || ""}|${this._lang}`;
+    if (this._root && this._key === key && !force) { this._sync(); return; }
+    this._key = key;
+    const pl = this._lang === "pl" ? 1 : 0;
+    const preset = this._config.preset && LHC_PRESETS[this._config.preset] ? this._config.preset : "";
+    this.innerHTML = `
+      <style>
+        .lhc-ed{display:flex;flex-direction:column;gap:12px}
+        .lhc-ed .warn{border:1px solid var(--warning-color,#f59e0b);border-radius:12px;padding:10px 12px;font-size:13px;line-height:1.4}
+        .lhc-ed .warn button{margin-top:8px;padding:6px 12px;border-radius:999px;border:0;cursor:pointer;background:var(--primary-color);color:var(--text-primary-color,#fff);font:inherit}
+        .lhc-ed img.thumb{width:100%;max-height:220px;object-fit:contain;border-radius:12px;background:#0b1220}
+        .lhc-ed h3{margin:8px 0 0;font-size:16px;font-weight:500}
+        .lhc-ed .hint{margin:0;color:var(--secondary-text-color);font-size:13px;line-height:1.4}
+        .lhc-ed details{border:1px solid var(--divider-color,#ccc);border-radius:12px;padding:0 12px}
+        .lhc-ed summary{cursor:pointer;padding:12px 0;display:flex;align-items:center;gap:10px;font-weight:500;list-style:none}
+        .lhc-ed summary::-webkit-details-marker{display:none}
+        .lhc-ed summary .tag{margin-left:auto;font-size:12px;font-weight:400;color:var(--secondary-text-color)}
+        .lhc-ed summary .tag.on{color:var(--primary-color)}
+        .lhc-ed details[open] summary{border-bottom:1px solid var(--divider-color,#ccc);margin-bottom:12px}
+        .lhc-ed details > ha-form{display:block;padding-bottom:12px}
+      </style>
+      <div class="lhc-ed">
+        <ha-form data-form="top"></ha-form>
+        ${preset && this._config.image ? `<div class="warn">${this._tx("img_warn")}<br><button type="button" data-dropimg>${this._tx("img_btn")}</button></div>` : ""}
+        ${preset ? `<img class="thumb" src="${lhcEsc(lhcPresetImage({ ...this._config, preset }))}" alt="">` : ""}
+        ${preset ? `<h3>${this._tx("rooms")}</h3><p class="hint">${this._tx("rooms_hint")}</p>
+          ${LHC_PRESETS[preset].rooms.filter((g) => !g.label).map((g) => {
+            const m = LHC_ROOM_META[g.id] || ["mdi:home-outline", g.id, g.id];
+            return `<details data-room="${g.id}"><summary><ha-icon icon="${m[0]}"></ha-icon><span class="nm"></span><span class="tag"></span></summary><ha-form data-form="${g.id}"></ha-form></details>`;
+          }).join("")}`
+        : `<p class="hint">${this._tx("own_hint")}</p>`}
+      </div>`;
+    this._root = this.querySelector(".lhc-ed");
+    const top = this._root.querySelector('[data-form="top"]');
+    top.schema = [
+      { name: "preset", selector: { select: { mode: "dropdown", options: [
+        ...Object.keys(LHC_PRESETS).map((k) => ({ value: k, label: (LHC_PRESET_NAMES[k] || [k, k])[pl] })),
+        { value: "own", label: this._tx("own") },
+      ] } } },
+      ...(preset ? [] : [{ name: "image", selector: { text: {} } }]),
+      { name: "title", selector: { text: {} } },
+      { name: "weather", selector: { entity: { domain: "weather" } } },
+      { name: "main_thermostat", selector: { entity: { domain: "climate" } } },
+      { name: "heating", selector: { entity: { domain: "climate", multiple: true } } },
+    ];
+    top.computeLabel = (s) => this._tx(s.name === "preset" ? "house" : s.name);
+    top.addEventListener("value-changed", (e) => this._topChanged(e.detail.value));
+    const drop = this._root.querySelector("[data-dropimg]");
+    if (drop) drop.addEventListener("click", () => this._usePreset());
+    this._root.querySelectorAll("details > ha-form").forEach((f) => {
+      const id = f.dataset.form;
+      f.schema = [
+        { name: "name", selector: { text: {} } },
+        { name: "lights", selector: { entity: { domain: "light", multiple: true } } },
+        { name: "temperature", selector: { entity: { domain: ["sensor", "climate"] } } },
+        { name: "humidity", selector: { entity: { domain: "sensor" } } },
+        { name: "tv", selector: { entity: { domain: "media_player", multiple: true } } },
+        { name: "hide", selector: { boolean: {} } },
+      ];
+      f.computeLabel = (s) => this._tx(s.name);
+      f.addEventListener("value-changed", (e) => this._roomChanged(id, e.detail.value));
+    });
+    this._sync();
+  }
+
+  _sync() {
+    const c = this._config, pl = this._lang === "pl" ? 2 : 1;
+    const top = this._root.querySelector('[data-form="top"]');
+    top.hass = this._hass;
+    top.data = {
+      preset: c.preset && LHC_PRESETS[c.preset] ? c.preset : "own", image: c.image || "", title: c.title || "",
+      weather: c.weather || "", main_thermostat: c.main_thermostat || "",
+      heating: lhcArr(c.heating).map((h) => (typeof h === "string" ? h : h && h.entity)).filter(Boolean),
+    };
+    this._root.querySelectorAll("details[data-room]").forEach((d) => {
+      const id = d.dataset.room, u = this._user(id), m = LHC_ROOM_META[id] || ["", id, id];
+      const tv = !u.tv ? [] : Array.isArray(u.tv) ? u.tv : typeof u.tv === "string" ? [u.tv] : lhcArr(u.tv.entities || u.tv.entity);
+      const data = {
+        name: u.name || "", lights: lhcArr(u.lights).map((x) => (typeof x === "string" ? x : x && x.entity)).filter(Boolean),
+        temperature: u.temperature || "", humidity: u.humidity || "", tv, hide: !!u.hide,
+      };
+      d.querySelector(".nm").textContent = u.name || m[pl];
+      const n = data.lights.length + (data.temperature ? 1 : 0) + (data.humidity ? 1 : 0) + tv.length;
+      const tag = d.querySelector(".tag");
+      tag.textContent = u.hide ? this._tx("hidden") : n ? `✓ ${n}` : "";
+      tag.classList.toggle("on", !u.hide && n > 0);
+      const f = d.querySelector("ha-form");
+      f.hass = this._hass; f.data = data;
+    });
+  }
+
+  _emit(config) {
+    this._config = config;
+    this.dispatchEvent(new CustomEvent("config-changed", { detail: { config }, bubbles: true, composed: true }));
+    this._render();
+  }
+
+  // Switch a card with its own picture to the ready-made house: drop the picture and room positions, keep entities.
+  _usePreset() {
+    const c = { ...this._config };
+    delete c.image;
+    const geo = ["chip", "shape", "focus", "glow", "x", "y", "w", "h"];
+    c.rooms = this._rooms().map((r) => {
+      const o = { ...r }; geo.forEach((k) => delete o[k]);
+      if (o.tv && typeof o.tv === "object" && !Array.isArray(o.tv)) { const t = { ...o.tv }; delete t.glow; delete t.screen; o.tv = t; }
+      return o;
+    });
+    this._emit(c);
+    this._render(true);
+  }
+
+  _topChanged(v) {
+    const c = { ...this._config };
+    const set = (k, val) => { if (val === "" || val == null || (Array.isArray(val) && !val.length)) delete c[k]; else c[k] = val; };
+    if (v.preset === "own") { delete c.preset; if (!c.image) c.image = "/local/living-house/house.webp"; }
+    else if (v.preset) { c.preset = v.preset; if (c.image === "/local/living-house/house.webp") delete c.image; }
+    if (!c.preset) set("image", v.image);
+    set("title", v.title); set("weather", v.weather); set("main_thermostat", v.main_thermostat);
+    const old = lhcArr(this._config.heating);
+    set("heating", lhcArr(v.heating).map((id) => old.find((h) => h && typeof h === "object" && h.entity === id) || { entity: id }));
+    this._emit(c);
+  }
+
+  _roomChanged(id, v) {
+    const rooms = this._rooms().map((r) => ({ ...r }));
+    let i = rooms.findIndex((r) => r && String(r.id) === id);
+    if (i < 0) { rooms.push({ id }); i = rooms.length - 1; }
+    const r = rooms[i];
+    const set = (k, val) => { if (val === "" || val == null || val === false || (Array.isArray(val) && !val.length)) delete r[k]; else r[k] = val; };
+    set("name", v.name);
+    const oldL = lhcArr(r.lights);
+    set("lights", lhcArr(v.lights).map((e) => oldL.find((x) => x && typeof x === "object" && x.entity === e) || e));
+    set("temperature", v.temperature); set("humidity", v.humidity); set("hide", v.hide);
+    const tv = lhcArr(v.tv);
+    if (!tv.length) delete r.tv;
+    else if (r.tv && typeof r.tv === "object" && !Array.isArray(r.tv)) r.tv = { ...r.tv, entities: tv };
+    else r.tv = tv;
+    if (Object.keys(r).length === 1) rooms.splice(i, 1);
+    this._emit({ ...this._config, rooms });
+  }
+}
+if (!customElements.get("living-house-card-editor")) customElements.define("living-house-card-editor", LivingHouseCardEditor);
 
 
 /* ---------- Living House Card – rooms hub + room views ----------
@@ -3120,5 +3465,5 @@ if (!customElements.get("living-rooms-card")) {
 }
 
 
-console.info("%c LIVING-HOUSE-CARD %c v0.2.2 ", "background:#2563eb;color:#fff;border-radius:4px 0 0 4px", "background:#0f172a;color:#93c5fd;border-radius:0 4px 4px 0");
+console.info("%c LIVING-HOUSE-CARD %c v0.3.0 ", "background:#2563eb;color:#fff;border-radius:4px 0 0 4px", "background:#0f172a;color:#93c5fd;border-radius:0 4px 4px 0");
 })();

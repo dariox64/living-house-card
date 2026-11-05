@@ -14,7 +14,9 @@ const css = (p) => "`" + read(p).replace(/\\/g, "\\\\").replace(/`/g, "\\`").tri
 const banner = `/*! Living House Card v${pkg.version} | MIT License | https://github.com/krystianokris/living-house-card */\n`;
 let out = [
   read("src/shared.js").replace("__VERSION__", pkg.version),
+  read("src/presets.js"),
   read("src/house-card.js").replace("__HOUSE_CSS__", css("src/house.css")),
+  read("src/house-editor.js"),
   read("src/rooms-card.js").replace("__ROOMS_CSS__", css("src/rooms.css")),
   `console.info("%c LIVING-HOUSE-CARD %c v${pkg.version} ", "background:#2563eb;color:#fff;border-radius:4px 0 0 4px", "background:#0f172a;color:#93c5fd;border-radius:0 4px 4px 0");`,
 ].join("\n\n");

@@ -60,6 +60,21 @@ ha-icon{--mdc-icon-size:20px;display:inline-flex}
 .outer.fit .stage{container-type:size}
 .house{position:relative;width:100%;max-width:980px;aspect-ratio:var(--ratio,1.11);container-type:inline-size;user-select:none;perspective:1600px}
 .outer.fit .house{width:min(100cqw,calc(100cqh * var(--ratio,1.11)));max-width:none}
+/* tall houses: bigger, the visible window moves floor by floor */
+.outer.fit .stage.tall{overflow:hidden;place-items:start center}
+.outer.fit .stage.tall .house{width:min(100cqw,calc(100cqh * 1.3));top:0;transition:top .6s cubic-bezier(.3,.8,.2,1)}
+.stage.tall .hm-btn{top:calc(var(--vtop,0%) + 1%)}
+.stage.tall .legend{bottom:auto;top:calc(var(--vtop,0%) + var(--vh,100%) - 6%)}
+.stage.tall .pop{top:var(--vy,50%);max-height:calc(var(--vh,100%) * .9)}
+.stage.tall .pop.center{top:calc(var(--vtop,0%) + var(--vh,100%) - 3%);bottom:auto;transform:translate(-50%,-100%)}
+.fnav{position:absolute;z-index:6;width:48px;height:48px;border-radius:50%;display:grid;place-items:center;color:#e0f2fe;cursor:pointer;
+  left:min(calc(50% + min(50cqw, 65cqh) + 14px), calc(100% - 54px));
+  background:rgba(37,99,235,.28);border:1px solid rgba(147,197,253,.55);box-shadow:0 0 18px rgba(59,130,246,.35);opacity:.85;transition:opacity .25s,transform .25s}
+.fnav ha-icon{--mdc-icon-size:30px}
+.fnav:hover{opacity:1;transform:scale(1.1)}
+.fnav.up{top:calc(50% - 56px)}.fnav.down{top:calc(50% + 8px)}
+.fnav[hidden]{visibility:hidden;display:grid}
+.house.zoomed ~ .fnav{opacity:0;pointer-events:none}
 .scenes{grid-area:sc;display:flex;gap:12px;justify-content:center;align-items:center;overflow-x:auto;padding:4px 2px;scrollbar-width:none}
 .scenes::-webkit-scrollbar,.nav::-webkit-scrollbar{display:none}
 

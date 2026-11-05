@@ -62,7 +62,36 @@ Otwórz <http://localhost:8000/demo/> – udawane urządzenia, wszystko da się 
 2. Skopiuj do `/config/www/living-house-card/`.
 3. Ustawienia → Dashboardy → ⋮ → **Zasoby** → dodaj `/local/living-house-card/living-house-card.js` jako **moduł JavaScript**.
 
-## 🏁 Szybki start
+## 🏠 Wybierz gotowy dom
+
+Bez AI, bez kalibracji i bez YAML-a – **Edytuj dashboard → Dodaj kartę → Living House Card**, wybierasz dom z listy i klikasz światła, czujniki i TV w każdym pokoju. Plakietki, obrysy pokoi i ekran TV są już ustawione.
+
+| <img src="images/houses/2-bedrooms.webp" width="190"> | <img src="images/houses/3-bedrooms.webp" width="190"> | <img src="images/houses/basement.webp" width="190"> | <img src="images/houses/attic.webp" width="190"> |
+|:---:|:---:|:---:|:---:|
+| `2-bedrooms` | `3-bedrooms` | `basement` | `attic` |
+| <img src="images/houses/3-bedrooms-basement.webp" width="190"> | <img src="images/houses/3-bedrooms-attic.webp" width="190"> | <img src="images/houses/basement-attic.webp" width="160"> | <img src="images/houses/3-bedrooms-basement-attic.webp" width="160"> |
+| `3-bedrooms-basement` | `3-bedrooms-attic` | `basement-attic` | `3-bedrooms-basement-attic` |
+
+Wolisz YAML? Też działa:
+
+```yaml
+type: custom:living-house-card
+preset: basement          # any name from the table above
+weather: weather.home
+rooms:                    # tylko pokoje, które chcesz podpiąć – po id
+  - id: living
+    lights: [light.salon_sufit]
+    tv: [media_player.salon_tv]
+  - id: utility
+    name: Kotłownia       # dowolna nazwa
+    temperature: sensor.kociol_temperatura
+  - id: workshop
+    hide: true            # usuń pokój, którego nie masz
+```
+
+Lista id pokoi w każdym domu: **[docs/configuration.md → Ready-made houses](docs/configuration.md#ready-made-houses)**. Wszystkie domy obejrzysz w [demo](https://krystianokris.github.io/living-house-card/demo/?card=house&house=basement&lang=pl).
+
+## 🏁 Szybki start – własny dom
 
 1. Wrzuć obrazek 3D domu do `/config/www/living-house/house.webp` ([jak go zrobić](docs/house-image.md)).
 2. Utwórz dashboard z widokiem **Panel** i dodaj kartę:

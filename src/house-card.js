@@ -26,6 +26,7 @@ const LHC_DEFAULTS = {
   scenes: [],
   rooms: [],
   fit: true,
+  scroll_floors: "auto", // tall houses: show bigger + ▲▼ floor arrows (auto | true | false)
   tilt: true,
   zoom: 2.1,
   weather_fx: true,
@@ -51,13 +52,15 @@ const LHC_DN = ["auto", "day", "night"];
 const LHC_DN_ICON = { auto: "mdi:theme-light-dark", day: "mdi:weather-sunny", night: "mdi:weather-night" };
 
 class LivingHouseCard extends HTMLElement {
+  static getConfigElement() { return document.createElement("living-house-card-editor"); }
   static getStubConfig() {
-    return { image: "/local/living-house/house.webp", title: "Living House", weather: "weather.home", rooms: [] };
+    return { preset: "2-bedrooms", title: "Living House", weather: "weather.home", rooms: [] };
   }
 
   setConfig(config) {
     if (!config) throw new Error("Invalid configuration");
-    this._cfg = { ...LHC_DEFAULTS, ...config };
+    this._raw = { ...LHC_DEFAULTS, ...config };
+    this._cfg = lhcApplyPreset(this._raw, this._lang || lhcLang(this._hass, this._raw));
     this._normalize();
     this._room = null;
     const ls = (k, d) => { try { return localStorage.getItem(k) || d; } catch (e) { return d; } };
@@ -164,7 +167,11 @@ class LivingHouseCard extends HTMLElement {
     const old = this._hass;
     this._hass = hass;
     const lang = lhcLang(hass, this._cfg);
-    if (lang !== this._lang) { this._lang = lang; if (this._root) this._build(); }
+    if (lang !== this._lang) {
+      this._lang = lang;
+      if (this._raw && this._raw.preset) { this._cfg = lhcApplyPreset(this._raw, lang); this._normalize(); this._trackedList = null; }
+      if (this._root) this._build();
+    }
     if (!this._root) this._build();
     if (!old || this._changed(old, hass)) this._update();
     const now = Date.now();
@@ -230,7 +237,62 @@ class LivingHouseCard extends HTMLElement {
       outer.style.height = "";
       outer.style.removeProperty("--z");
     }
+    this._layoutTall(fit);
     this._applyZoom();
+  }
+
+  /* ---------- tall houses (basement + attic): bigger view, ▲▼ moves one floor ---------- */
+  _layoutTall(fit) {
+    const st = this._el && this._el("stage"), house = st && this._el("house");
+    if (!house) return;
+    const m = this._cfg.scroll_floors;
+    const tall = fit && !this._edit && (m === true || (m !== false && this._ratio && this._ratio < 1.05));
+    st.classList.toggle("tall", !!tall);
+    if (!tall) { house.style.top = ""; this._floors = null; this._panFloor(0); return; }
+    if (!this._wheelOn) this._setupFloorInput(st);
+    requestAnimationFrame(() => {
+      const sh = st.clientHeight, hh = house.offsetHeight, max = Math.max(0, hh - sh);
+      const ys = this._rooms.filter((r) => r.label).map((r) => r.y).sort((a, b) => a - b);
+      let t = ys.length ? ys.map((y) => Math.min(max, Math.max(0, (y / 100) * hh - sh * 0.05)))
+        : Array.from({ length: Math.ceil(max / (sh * 0.6)) + 1 }, (_, i) => Math.min(max, i * sh * 0.6));
+      if (t.length) t[0] = 0; // first stop always shows the roof
+      t = t.filter((v, i) => i === 0 || v - t[i - 1] > 24);
+      if (t.length && max - t[t.length - 1] > 24) t.push(max);
+      this._floors = t.length > 1 ? t : null;
+      this._panFloor(0);
+    });
+  }
+  _panFloor(step) {
+    const st = this._el && this._el("stage"), house = st && this._el("house");
+    if (!house) return;
+    const up = this._el("fup") || st.querySelector(".fnav.up"), dn = st.querySelector(".fnav.down");
+    if (!this._floors) { up.hidden = dn.hidden = true; ["--vtop", "--vh", "--vy"].forEach((k) => house.style.removeProperty(k)); return; }
+    const n = this._floors.length;
+    this._floorIx = Math.max(0, Math.min(n - 1, (this._floorIx || 0) + step));
+    const px = this._floors[this._floorIx], hh = house.offsetHeight, sh = st.clientHeight;
+    this._panPx = px;
+    house.style.top = `${-px}px`;
+    house.style.setProperty("--vtop", `${(px / hh) * 100}%`);
+    house.style.setProperty("--vh", `${(sh / hh) * 100}%`);
+    house.style.setProperty("--vy", `${((px + sh / 2) / hh) * 100}%`);
+    up.hidden = this._floorIx === 0;
+    dn.hidden = this._floorIx === n - 1;
+    if (step && this._room) this._applyZoom();
+  }
+  _setupFloorInput(st) {
+    this._wheelOn = true;
+    let last = 0, y0 = null;
+    const go = (dir) => { const now = Date.now(); if (now - last < 450) return; last = now; this._panFloor(dir); };
+    st.addEventListener("wheel", (e) => {
+      if (!st.classList.contains("tall") || e.ctrlKey || this._room) return;
+      e.preventDefault(); if (Math.abs(e.deltaY) > 4) go(e.deltaY > 0 ? 1 : -1);
+    }, { passive: false });
+    st.addEventListener("touchstart", (e) => { y0 = e.touches[0].clientY; }, { passive: true });
+    st.addEventListener("touchend", (e) => {
+      if (y0 === null || !st.classList.contains("tall")) return;
+      const dy = e.changedTouches[0].clientY - y0; y0 = null;
+      if (Math.abs(dy) > 40) go(dy < 0 ? 1 : -1);
+    }, { passive: true });
   }
 
   /* ---------- szkielet ---------- */
@@ -297,6 +359,8 @@ class LivingHouseCard extends HTMLElement {
               <div class="pop glass" id="pop" hidden></div>
               <div class="edpanel glass" id="edpanel" hidden></div>
             </div>
+            <button class="fnav up glass" data-fnav="-1" hidden title="${this._t("floor_up")}">${this._icon("mdi:chevron-up")}</button>
+            <button class="fnav down glass" data-fnav="1" hidden title="${this._t("floor_down")}">${this._icon("mdi:chevron-down")}</button>
           </main>
 
           <aside class="right">
@@ -312,7 +376,7 @@ class LivingHouseCard extends HTMLElement {
     this._el = (id) => this._root.getElementById(id);
     const im = this._el("himg");
     if (im) {
-      const setRatio = () => { if (im.naturalWidth) this._root.querySelector(".outer").style.setProperty("--ratio", (im.naturalWidth / im.naturalHeight).toFixed(5)); };
+      const setRatio = () => { if (!im.naturalWidth) return; this._ratio = im.naturalWidth / im.naturalHeight; this._root.querySelector(".outer").style.setProperty("--ratio", this._ratio.toFixed(5)); this._fit(); };
       if (im.complete) setRatio(); else im.addEventListener("load", setRatio, { once: true });
     }
     this._setupTilt();
@@ -644,7 +708,8 @@ class LivingHouseCard extends HTMLElement {
     if (!r) { z.style.transform = ""; return; }
     const f = this._focus(r);
     const fit = this._root.querySelector(".outer").classList.contains("fit");
-    const tx = fit ? 31 : 50, ty = fit ? 50 : 30;
+    const st = this._el("stage"), tall = st && st.classList.contains("tall") && this._floors;
+    const tx = fit ? 31 : 50, ty = tall ? (((this._panPx || 0) + st.clientHeight / 2) / house.offsetHeight) * 100 : fit ? 50 : 30;
     z.style.transformOrigin = `${f.x}% ${f.y}%`;
     z.style.transform = `translate(${tx - f.x}%, ${ty - f.y}%) scale(${this._cfg.zoom})`;
     house.style.setProperty("--sx", `${tx}%`);
@@ -942,6 +1007,7 @@ class LivingHouseCard extends HTMLElement {
     house.classList.toggle("editing", this._edit);
     this._el("edbtn") && this._el("edbtn").classList.toggle("forced", this._edit);
     const tilt = this._el("tilt"); if (tilt) tilt.style.transform = "";
+    this._fit();
     this._renderHouse();
     this._renderEditor();
   }
@@ -1091,12 +1157,13 @@ class LivingHouseCard extends HTMLElement {
   _click(e) {
     const path = e.composedPath();
     const stop = path.indexOf(this._root);
-    const keys = ["toggle", "more", "nav", "room", "scene", "roomlights", "dn", "heatmap", "wake", "edit", "edsel", "eddraw", "edundo", "eddone", "edcopy", "edclose", "close"];
+    const keys = ["fnav", "toggle", "more", "nav", "room", "scene", "roomlights", "dn", "heatmap", "wake", "edit", "edsel", "eddraw", "edundo", "eddone", "edcopy", "edclose", "close"];
     const t = (stop >= 0 ? path.slice(0, stop) : path).find((n) => n.dataset && Object.keys(n.dataset).some((k) => keys.includes(k)));
     if (!t) return;
     const d = t.dataset;
     e.stopPropagation();
     if (d.wake) return this._hideSaver();
+    if (d.fnav) return this._panFloor(Number(d.fnav));
     if (d.edit || d.edclose) return this._toggleEdit();
     if (this._edit) {
       if (d.edsel) { this._sel = d.edsel; this._draw = null; this._draft = []; this._renderHouse(); return this._renderEditor(); }
@@ -1159,5 +1226,5 @@ const LHC_HOUSE_STYLE = __HOUSE_CSS__;
 if (!customElements.get("living-house-card")) {
   customElements.define("living-house-card", LivingHouseCard);
   window.customCards = window.customCards || [];
-  window.customCards.push({ type: "living-house-card", name: "Living House Card", description: "Living 3D house dashboard: lights, TV glow, weather, day/night, heat map.", preview: false, documentationURL: "https://github.com/krystianokris/living-house-card" });
+  window.customCards.push({ type: "living-house-card", name: "Living House Card", description: "Living 3D house dashboard: lights, TV glow, weather, day/night, heat map.", preview: true, documentationURL: "https://github.com/krystianokris/living-house-card" });
 }
