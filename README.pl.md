@@ -33,6 +33,12 @@ Druga karta, **`living-rooms-card`**, to mozaika dużych kafelków ze zdjęciami
 |---|---|
 | ![Pomieszczenia](images/rooms-hub.webp) | ![Pokój](images/room-view.webp) |
 
+### Kocia strefa
+
+**`living-cats-card`** to żywy obrazek kociego kącika. Scena podąża za kuwetą i karmnikiem: kot pojawia się w kuwecie albo przy misce, kuweta świeci podczas sprzątania, UV widać na fioletowo, pełny pojemnik dostaje czerwoną obwódkę, a dzień zmienia się w noc razem ze słońcem. Szklane panele pokazują wizyty dziś, wagę kota i ostatni posiłek, z przyciskami: sprzątnij, nakarm (wybór porcji), tryb nocny, UV i wolne karmienie. [Konfiguracja](docs/configuration.md#living-cats-card)
+
+![Kocia strefa](images/cats/day.webp)
+
 ## 🚀 Wypróbuj bez Home Assistant
 
 ### 👉 [Otwórz demo na żywo](https://krystianokris.github.io/living-house-card/demo/)

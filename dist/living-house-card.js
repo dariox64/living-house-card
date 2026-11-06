@@ -1,8 +1,8 @@
-/*! Living House Card v0.3.0 | MIT License | https://github.com/krystianokris/living-house-card */
+/*! Living House Card v0.4.0 | MIT License | https://github.com/krystianokris/living-house-card */
 (() => {
 "use strict";
 /* ---------- Living House Card – shared helpers ---------- */
-const LHC_VERSION = "0.3.0";
+const LHC_VERSION = "0.4.0";
 const LHC_BAD = ["unknown", "unavailable", undefined, null, ""];
 const LHC_TV_ON = ["on", "playing", "paused", "buffering"];
 
@@ -82,8 +82,8 @@ const LHC_I18N = {
     temperature: "Temperature", humidity: "Humidity", h24: "24 h ago", h18: "18 h", h12: "12 h", h6: "6 h", h0: "now",
     washer_st: { off: "Off", standby: "Standby", running: "Washing", paused: "Paused", alarm: "Alarm!" },
     dryer_st: { idle: "Idle", delay_start_waiting: "Delayed start", running: "Drying", anti_crease: "Anti-crease", finished: "Done" },
-    feeder_st: { standby: "Ready", feeding: "Feeding…", fault: "Error" },
-    litter_st: { standby: "Clean & ready", cleaning: "Cleaning…", working: "Working", full: "Full!", fault: "Error" },
+    feeder_st: { standby: "Ready", feeding: "Feeding…", feeding_complete: "Fed", fault: "Error" },
+    litter_st: { standby: "Clean & ready", cleaning: "Cleaning…", working: "Working", full: "Full!", fault: "Error", caking: "Waiting to clean", occupied: "Cat inside", blocked: "Entrance blocked", off: "Off" },
     preset: { auto: "Auto", sleep: "Sleep", turbo: "Turbo", manual: "Manual" },
     aq_states: { excellent: "Excellent", good: "Good", moderate: "Moderate", poor: "Poor", very_poor: "Very poor" },
     dry_prog: { auto: "Auto", allergy_care: "Allergy care", refresh: "Refresh", sportswear: "Sportswear", towels: "Towels", time: "Timed", cotton: "Cotton", baby_care: "Baby care", synthetic: "Synthetics", wool: "Wool", delicates: "Delicates", quick_30: "Quick 30", shirts: "Shirts", bedding: "Bedding", down: "Down", eco: "Eco" },
@@ -95,6 +95,13 @@ const LHC_I18N = {
     pr_status: { running: "Printing", pause: "Paused", finish: "Done", failed: "Failed", idle: "Idle", prepare: "Preparing", slicing: "Slicing", init: "Starting", offline: "Offline", unknown: "—" },
     pr_stage: { heating_hotend: "Heating nozzle", heatbed_preheating: "Heating bed", auto_bed_leveling: "Bed levelling", changing_filament: "Changing filament", cleaning_nozzle_tip: "Cleaning nozzle", homing_toolhead: "Homing", filament_loading: "Loading filament", filament_unloading: "Unloading filament", inspecting_first_layer: "Checking first layer", calibrating_extrusion_flow: "Flow calibration", cooling_nozzle: "Cooling nozzle", paused_filament_runout: "Filament ran out!", paused_nozzle_clog: "Nozzle clogged!", paused_user: "Paused by user" },
     tv: "TV", tv_playing: "playing", washing: "Washing", drying: "Drying", clean_air: "Clean air", of_lights: "lights",
+    // cats card
+    cats_title: "Cat corner", cats_kicker: "Cat corner · live",
+    scene_ok: "All good – clean and fed", scene_cleaning: "The litter box is cleaning itself…", scene_litter: (n) => `${n || "The cat"} is in the litter box`,
+    scene_eating: (n) => `${n || "The cat"} is eating`, scene_full: "The litter bin is full – empty it", scene_problem: "Litter box problem – check it",
+    scene_sleep: "Night mode – quiet", bin_full: "Bin full!", litter_problem: "Litter box problem", visits_today: "Visits today",
+    cat_weight: "Cat weight", time_today: "Time today", last_portion: "Last meal", quick_feed: "Quick feed",
+    quick_confirm: "Dispense a quick meal?", just_now: "just now", min_ago: (m) => `${m} min ago`, h_ago: (h) => `${h} h ago`,
   },
   pl: {
     floor_up: "Piętro wyżej", floor_down: "Piętro niżej",
@@ -147,8 +154,8 @@ const LHC_I18N = {
     temperature: "Temperatura", humidity: "Wilgotność", h24: "24 h temu", h18: "18 h", h12: "12 h", h6: "6 h", h0: "teraz",
     washer_st: { off: "Wyłączona", standby: "Czuwanie", running: "Pierze", paused: "Pauza", alarm: "Alarm!" },
     dryer_st: { idle: "Bezczynna", delay_start_waiting: "Opóźniony start", running: "Suszy", anti_crease: "Przeciw zagnieceniom", finished: "Gotowe" },
-    feeder_st: { standby: "Gotowy", feeding: "Karmi…", fault: "Błąd" },
-    litter_st: { standby: "Czysta, gotowa", cleaning: "Sprzątanie…", working: "Pracuje", full: "Pełna!", fault: "Błąd" },
+    feeder_st: { standby: "Gotowy", feeding: "Karmi…", feeding_complete: "Nakarmiony", fault: "Błąd" },
+    litter_st: { standby: "Czysta, gotowa", cleaning: "Sprzątanie…", working: "Pracuje", full: "Pełna!", fault: "Błąd", caking: "Czeka na sprzątanie", occupied: "Kot w środku", blocked: "Wejście zablokowane", off: "Wyłączona" },
     preset: { auto: "Auto", sleep: "Sen", turbo: "Turbo", manual: "Ręczny" },
     aq_states: { excellent: "Doskonała", good: "Dobra", moderate: "Umiarkowana", poor: "Słaba", very_poor: "Bardzo słaba" },
     dry_prog: { auto: "Auto", allergy_care: "Antyalergiczny", refresh: "Odświeżanie", sportswear: "Sportowe", towels: "Ręczniki", time: "Czasowy", cotton: "Bawełna", baby_care: "Dziecięce", synthetic: "Syntetyki", wool: "Wełna", delicates: "Delikatne", quick_30: "Szybki 30", shirts: "Koszule", bedding: "Pościel", down: "Puch", eco: "Eco" },
@@ -160,6 +167,12 @@ const LHC_I18N = {
     pr_status: { running: "Drukuje", pause: "Pauza", finish: "Gotowe", failed: "Błąd", idle: "Bezczynna", prepare: "Przygotowanie", slicing: "Przygotowanie pliku", init: "Start", offline: "Offline", unknown: "—" },
     pr_stage: { heating_hotend: "Nagrzewanie dyszy", heatbed_preheating: "Nagrzewanie stołu", auto_bed_leveling: "Poziomowanie stołu", changing_filament: "Zmiana filamentu", cleaning_nozzle_tip: "Czyszczenie dyszy", homing_toolhead: "Bazowanie", filament_loading: "Ładowanie filamentu", filament_unloading: "Wyładowanie filamentu", inspecting_first_layer: "Kontrola 1. warstwy", calibrating_extrusion_flow: "Kalibracja przepływu", cooling_nozzle: "Chłodzenie dyszy", paused_filament_runout: "Skończył się filament!", paused_nozzle_clog: "Zatkana dysza!", paused_user: "Wstrzymane" },
     tv: "TV", tv_playing: "gra", washing: "Pierze", drying: "Suszy", clean_air: "Czyste", of_lights: "świateł",
+    cats_title: "Kocia strefa", cats_kicker: "Kocia strefa · na żywo",
+    scene_ok: "Wszystko gra – czysto i pełna miska", scene_cleaning: "Kuweta się sprząta…", scene_litter: (n) => `${n || "Kot"} jest w kuwecie`,
+    scene_eating: (n) => `${n || "Kot"} je`, scene_full: "Pojemnik kuwety pełny – opróżnij", scene_problem: "Problem z kuwetą – sprawdź",
+    scene_sleep: "Tryb nocny – cisza", bin_full: "Pojemnik pełny!", litter_problem: "Problem z kuwetą", visits_today: "Wizyty dziś",
+    cat_weight: "Waga kota", time_today: "Czas dziś", last_portion: "Ostatni posiłek", quick_feed: "Szybkie karmienie",
+    quick_confirm: "Podać szybki posiłek?", just_now: "przed chwilą", min_ago: (m) => `${m} min temu`, h_ago: (h) => `${h} h temu`,
   },
 };
 
@@ -2140,7 +2153,7 @@ class LivingRoomsCard extends HTMLElement {
       const id = String(r.id || `room${i + 1}`).replace(/[^\w-]/g, "-");
       const t = r.temperature;
       return {
-        id, name: r.name || id, icon: r.icon || "mdi:home-outline", image: r.image || "", subtitle: r.subtitle || "",
+        id, name: r.name || id, icon: r.icon || "mdi:home-outline", image: r.image || "", subtitle: r.subtitle || "", link: r.link || null,
         accent: lhcRgb(r.accent, LRC_PALETTE[i % LRC_PALETTE.length]), size: r.size || (i === 0 ? "big" : "normal"),
         temp: t && !String(t).startsWith("climate.") ? t : null, tempClimate: t && String(t).startsWith("climate.") ? t : null,
         hum: r.humidity || null,
@@ -2305,7 +2318,7 @@ class LivingRoomsCard extends HTMLElement {
 
   _route() {
     const id = decodeURIComponent((location.hash || "").slice(1));
-    const r = this._rooms.find((x) => x.id === id);
+    const r = this._rooms.find((x) => x.id === id && !x.link);
     if (r && this._view !== r.id) this._showRoom(r.id, null);
     else if (!r && this._view) this._showHub();
   }
@@ -2332,7 +2345,7 @@ class LivingRoomsCard extends HTMLElement {
       </header>
       <div class="bento" style="--rows:${rows}">
         ${this._rooms.map((r, i) => `
-          <article class="tile t-${r.id} sz-${sizes[i]} rise" style="--d:${i + 1};--acc:${r.accent}" data-open="${r.id}">
+          <article class="tile t-${r.id} sz-${sizes[i]} rise" style="--d:${i + 1};--acc:${r.accent}" ${r.link ? `data-nav="${lhcEsc(r.link)}"` : `data-open="${r.id}"`}>
             <div class="t-img" style="${this._img(r) ? `background-image:url('${lhcEsc(this._img(r))}')` : ""}"></div>
             <div class="t-shade"></div><div class="t-glare"></div>
             <div class="t-top">
@@ -2434,8 +2447,9 @@ class LivingRoomsCard extends HTMLElement {
     else { history.pushState(null, "", `${location.pathname}${location.search}`); this._showHub(); }
   }
   _step(dir) {
-    const i = this._rooms.findIndex((r) => r.id === this._view);
-    const n = this._rooms[(i + dir + this._rooms.length) % this._rooms.length];
+    const list = this._rooms.filter((r) => !r.link);
+    const i = list.findIndex((r) => r.id === this._view);
+    const n = list[(i + dir + list.length) % list.length];
     history.replaceState({ lrc: n.id }, "", `${location.pathname}${location.search}#${n.id}`);
     this._showRoom(n.id, null, dir);
   }
@@ -2554,7 +2568,7 @@ class LivingRoomsCard extends HTMLElement {
       <div class="rtop" style="--acc:${r.accent}">
         ${home ? `<button class="back home glass" data-nav="${lhcEsc(home)}">${this._icon("mdi:home-outline")}<span>${this._t("home")}</span></button>` : ""}
         <button class="back glass" data-hub="1">${this._icon("mdi:view-grid-outline")}<span>${lhcEsc(this._cfg.title || this._t("all_rooms"))}</span></button>
-        <nav class="rtabs">${this._rooms.map((x) => `<button class="rtab ${x.id === r.id ? "on" : ""}" data-goto="${x.id}" style="--acc:${x.accent}">${this._icon(x.icon)}<span>${lhcEsc(x.name)}</span></button>`).join("")}</nav>
+        <nav class="rtabs">${this._rooms.filter((x) => !x.link).map((x) => `<button class="rtab ${x.id === r.id ? "on" : ""}" data-goto="${x.id}" style="--acc:${x.accent}">${this._icon(x.icon)}<span>${lhcEsc(x.name)}</span></button>`).join("")}</nav>
       </div>
       <div class="rgrid ${cC ? "" : "two"}">
         <div class="col colA">
@@ -3465,5 +3479,402 @@ if (!customElements.get("living-rooms-card")) {
 }
 
 
-console.info("%c LIVING-HOUSE-CARD %c v0.3.0 ", "background:#2563eb;color:#fff;border-radius:4px 0 0 4px", "background:#0f172a;color:#93c5fd;border-radius:0 4px 4px 0");
+/* ---------- Living House Card – cat corner ----------
+ * type: custom:living-cats-card
+ * A living picture of the cat corner: the scene follows the litter box and the feeder
+ * (cat inside, cleaning, eating, day/night) and glass panels control both devices.
+ */
+const LCC_SCENES = ["night", "day", "litter", "eating", "cleaning"]; // DOM order = stacking order (night at the bottom)
+const LCC_CDN = "https://cdn.jsdelivr.net/gh/krystianokris/living-house-card@" + (LHC_VERSION.includes("_") ? "main" : "v" + LHC_VERSION) + "/images/cats/";
+const LCC_OCCUPIED = ["occupied", "defecation", "cat_inside", "in_use"];
+const LCC_CLEANING = ["cleaning", "working", "leveling", "emptying"];
+const LCC_FEEDING = ["feeding", "dispensing"];
+const LCC_FED_RECENT_MS = 3 * 60 * 1000;
+const LCC_SWITCH_ICONS = [[/uv/, "mdi:sun-wireless-outline"], [/sleep|nocn|night/, "mdi:weather-night"], [/deodor|dezodor/, "mdi:scent"],
+  [/slow|woln/, "mdi:tortoise"], [/light|swiatl|display/, "mdi:lightbulb-outline"], [/power|zasil/, "mdi:power"], [/lock|blokad/, "mdi:lock-outline"]];
+
+class LivingCatsCard extends HTMLElement {
+  static getStubConfig() {
+    return {
+      litter: { status: "sensor.litter_box_status", clean: "button.litter_box_clean", bin_full: "binary_sensor.litter_box_bin_full", weight: "sensor.litter_box_cat_weight", visits: "sensor.litter_box_visits_today", switches: [] },
+      feeder: { status: "sensor.pet_feeder_status", portions: "number.pet_feeder_manual_feed", last: "sensor.pet_feeder_last_portion", switches: [] },
+    };
+  }
+
+  setConfig(config) {
+    if (!config || (!config.litter && !config.feeder)) throw new Error("living-cats-card: add `litter:` and/or `feeder:`");
+    const sw = (l) => lhcArr(l).map((x) => (typeof x === "string" ? { entity: x } : x)).filter((x) => x && x.entity);
+    const litter = config.litter ? { ...config.litter, switches: sw(config.litter.switches) } : null;
+    const feeder = config.feeder ? { ...config.feeder, switches: sw(config.feeder.switches) } : null;
+    this._cfg = { sun: "sun.sun", title: null, cat_name: null, ...config, litter, feeder };
+    this._portions = null;
+    this._fedAt = 0;
+    if (this.shadowRoot) this.shadowRoot.innerHTML = "";
+    this._root = null;
+  }
+  getCardSize() { return 8; }
+  getGridOptions() { return { columns: 12, min_columns: 6 }; }
+
+  _t(k, a) { return lhcT(this._lang || "en", k, a); }
+  _m(g, k, f) { return lhcMap(this._lang || "en", g, k, f); }
+  _s(id) { return id && this._hass ? this._hass.states[id] : undefined; }
+  _ok(id) { const s = this._s(id); return !!s && !LHC_BAD.includes(s.state); }
+  _on(id) { const s = this._s(id); return !!s && s.state === "on"; }
+  _icon(i, extra = "") { return `<ha-icon icon="${i}" ${extra}></ha-icon>`; }
+
+  _img(k) {
+    const own = this._cfg.images && this._cfg.images[k];
+    if (own) return own;
+    const base = this._cfg.image_base ? String(this._cfg.image_base).replace(/\/?$/, "/") : LCC_CDN;
+    return base + k + ".webp";
+  }
+
+  set hass(h) {
+    const old = this._hass;
+    this._hass = h;
+    this._lang = lhcLang(h, this._cfg);
+    if (!this._root) { this._build(); this._update(); return; }
+    if (!old || this._ids().some((id) => old.states[id] !== h.states[id])) this._update();
+  }
+
+  connectedCallback() {
+    if (!this._ro && window.ResizeObserver) this._ro = new ResizeObserver(() => this._layout());
+    if (this._ro) this._ro.observe(this);
+    clearInterval(this._tick);
+    this._tick = setInterval(() => this._root && this._update(), 30000);
+  }
+  disconnectedCallback() {
+    if (this._ro) this._ro.disconnect();
+    clearInterval(this._tick);
+  }
+
+  _ids() {
+    const c = this._cfg, ids = [c.sun];
+    [c.litter, c.feeder].filter(Boolean).forEach((d) => Object.entries(d).forEach(([k, v]) => {
+      if (k === "switches") v.forEach((x) => ids.push(x.entity));
+      else if (typeof v === "string" && v.includes(".")) ids.push(v);
+    }));
+    return ids.filter(Boolean);
+  }
+
+  /* ---------- state ---------- */
+  _dayFactor() {
+    const f = this._cfg.force;
+    if (f === "day") return 1;
+    if (f === "night") return 0;
+    const s = this._s(this._cfg.sun);
+    if (!s) return 1;
+    const el = Number(s.attributes.elevation);
+    if (!Number.isFinite(el)) return s.state === "above_horizon" ? 1 : 0;
+    return Math.max(0, Math.min(1, (el + 5) / 13));
+  }
+  _state() {
+    const L = this._cfg.litter || {}, F = this._cfg.feeder || {};
+    const ls = this._s(L.status), fs = this._s(F.status);
+    const lst = ls ? ls.state : null, fst = fs ? fs.state : null;
+    const cleaning = LCC_CLEANING.includes(lst) || (L.clean && L.clean.startsWith("switch.") && this._on(L.clean));
+    const occupied = LCC_OCCUPIED.includes(lst) || (L.presence && this._on(L.presence));
+    const fedChanged = fs && fst === "feeding_complete" ? Date.parse(fs.last_changed) : 0;
+    const eating = LCC_FEEDING.includes(fst) || (fedChanged && Date.now() - fedChanged < LCC_FED_RECENT_MS) || Date.now() - this._fedAt < 20000;
+    const full = !!(L.bin_full && this._on(L.bin_full)) || lst === "full";
+    const problem = !!(L.problem && this._on(L.problem)) || lst === "fault" || lst === "blocked" || fst === "fault";
+    const sleep = L.switches.some((x) => /sleep|nocn|night/.test(x.entity) && this._on(x.entity));
+    const scene = cleaning ? "cleaning" : occupied ? "litter" : eating ? "eating" : null;
+    return { lst, fst, cleaning, occupied, eating, full, problem, sleep, scene };
+  }
+
+  /* ---------- build once, then only update ---------- */
+  _build() {
+    if (!this.shadowRoot) this.attachShadow({ mode: "open" });
+    const L = this._cfg.litter, F = this._cfg.feeder;
+    this.shadowRoot.innerHTML = `<style>${LCC_STYLE}</style>
+      <div class="wrap">
+        <div class="scene glass">
+          ${LCC_SCENES.map((k) => `<div class="layer" data-k="${k}" style="background-image:url('${lhcEsc(this._img(k))}')"></div>`).join("")}
+          <div class="tint"></div>
+          <div class="fx fx-uv"></div><div class="fx fx-clean"><i></i><i></i></div><div class="fx fx-full"></div><div class="fx fx-feed"></div>
+          ${this._cfg.back_path ? `<button class="back glass" data-nav="${lhcEsc(this._cfg.back_path)}">${this._icon("mdi:arrow-left")}<span>${lhcEsc(this._cfg.back_name || this._t("rooms_title"))}</span></button>` : ""}
+          <div class="head"><div class="kicker">${this._t("cats_kicker")}</div><h2>${lhcEsc(this._cfg.title || this._cfg.cat_name || this._t("cats_title"))}</h2><div class="say"></div></div>
+          ${L ? `<button class="spot glass s-litter" data-more="${lhcEsc(L.status || "")}">${this._icon("mdi:cat")}<span class="sp-txt"></span></button>` : ""}
+          ${F ? `<button class="spot glass s-feeder" data-more="${lhcEsc(F.status || "")}">${this._icon("mdi:bowl-mix-outline")}<span class="sp-txt"></span></button>` : ""}
+        </div>
+        <div class="side">
+          ${L ? `<section class="panel glass p-litter"></section>` : ""}
+          ${F ? `<section class="panel glass p-feeder"></section>` : ""}
+        </div>
+      </div>`;
+    this._root = this.shadowRoot.querySelector(".wrap");
+    this._root.addEventListener("click", (e) => this._click(e));
+    this._layout();
+  }
+
+  _layout() {
+    if (!this._root) return;
+    const w = this.clientWidth || this._root.clientWidth;
+    this._root.classList.toggle("narrow", w > 0 && w < 860);
+    this._root.classList.toggle("tiny", w > 0 && w < 560);
+  }
+
+  _update() {
+    if (!this._root || !this._hass) return;
+    const st = this._state(), d = this._dayFactor();
+    const sc = this._root.querySelector(".scene");
+    sc.style.setProperty("--day", d.toFixed(3));
+    sc.querySelectorAll(".layer").forEach((el) => {
+      const k = el.dataset.k;
+      el.classList.toggle("show", k === "night" || (k === "day" && !st.scene) || k === st.scene);
+    });
+    sc.classList.toggle("ev", !!st.scene);
+    const uvOn = (this._cfg.litter?.switches || []).some((x) => /uv/.test(x.entity) && this._on(x.entity));
+    sc.classList.toggle("uv", uvOn && !st.cleaning && !st.occupied);
+    sc.classList.toggle("cleaning", st.cleaning);
+    sc.classList.toggle("full", st.full || st.problem);
+    sc.classList.toggle("eating", st.eating);
+    sc.querySelector(".say").innerHTML = this._say(st);
+    const sl = sc.querySelector(".s-litter .sp-txt"), sf = sc.querySelector(".s-feeder .sp-txt");
+    if (sl) { sl.textContent = this._litterText(st); sc.querySelector(".s-litter").classList.toggle("bad", st.full || st.problem); }
+    if (sf) sf.textContent = this._feederText(st);
+    const pl = this._root.querySelector(".p-litter"), pf = this._root.querySelector(".p-feeder");
+    if (pl) pl.innerHTML = this._litterPanel(st);
+    if (pf) pf.innerHTML = this._feederPanel(st);
+  }
+
+  _say(st) {
+    const n = lhcEsc(this._cfg.cat_name || "");
+    if (st.problem) return `<span class="bad">${this._icon("mdi:alert-outline")}${this._t("scene_problem")}</span>`;
+    if (st.full) return `<span class="bad">${this._icon("mdi:delete-alert-outline")}${this._t("scene_full")}</span>`;
+    if (st.cleaning) return `${this._icon("mdi:autorenew", 'class="spin"')}${this._t("scene_cleaning")}`;
+    if (st.occupied) return `${this._icon("mdi:cat")}${this._t("scene_litter", n)}`;
+    if (st.eating) return `${this._icon("mdi:food-drumstick-outline")}${this._t("scene_eating", n)}`;
+    if (st.sleep) return `${this._icon("mdi:weather-night")}${this._t("scene_sleep")}`;
+    return `${this._icon("mdi:check-circle-outline", 'class="ok"')}${this._t("scene_ok")}`;
+  }
+  _litterText(st) {
+    if (st.full) return this._t("bin_full");
+    return st.lst && !LHC_BAD.includes(st.lst) ? this._m("litter_st", st.lst, st.lst) : this._t("st_offline");
+  }
+  _feederText(st) {
+    return st.fst && !LHC_BAD.includes(st.fst) ? this._m("feeder_st", st.fst, st.fst) : this._t("st_offline");
+  }
+
+  _val(id, digits) {
+    const s = this._s(id);
+    if (!s || LHC_BAD.includes(s.state)) return null;
+    const n = Number(s.state);
+    const v = Number.isFinite(n) && digits != null ? n.toFixed(digits) : s.state;
+    return { v, u: s.attributes.unit_of_measurement || "", s };
+  }
+  _stat(icon, label, val, unit) {
+    return `<div class="stat">${this._icon(icon)}<b>${val == null ? "—" : lhcEsc(val)}<small>${lhcEsc(unit || "")}</small></b><span>${label}</span></div>`;
+  }
+  _ago(iso) {
+    const m = Math.round((Date.now() - Date.parse(iso)) / 60000);
+    if (!Number.isFinite(m) || m < 0) return "";
+    if (m < 1) return this._t("just_now");
+    if (m < 60) return this._t("min_ago", m);
+    const h = Math.floor(m / 60);
+    return h < 24 ? this._t("h_ago", h) : "";
+  }
+  _switches(list) {
+    if (!list.length) return "";
+    return `<div class="tgl">${list.map((x) => {
+      const s = this._s(x.entity), on = s && s.state === "on", ok = s && !LHC_BAD.includes(s.state);
+      const icon = x.icon || (LCC_SWITCH_ICONS.find(([re]) => re.test(x.entity)) || [0, "mdi:toggle-switch-outline"])[1];
+      const name = x.name || (s && s.attributes.friendly_name) || x.entity;
+      return `<button class="tg ${on ? "on" : ""}" ${ok ? "" : "disabled"} data-toggle="${lhcEsc(x.entity)}" title="${lhcEsc(name)}">${this._icon(icon)}<span>${lhcEsc(name)}</span><i></i></button>`;
+    }).join("")}</div>`;
+  }
+
+  _litterPanel(st) {
+    const L = this._cfg.litter;
+    const w = this._val(L.weight, 1), vis = this._val(L.visits, 0), dur = this._val(L.duration, 0);
+    let durTxt = null, durU = "";
+    if (dur) { const sec = Number(dur.v) * (/min/.test(dur.u) ? 60 : 1); if (Number.isFinite(sec)) { durTxt = sec >= 120 ? Math.round(sec / 60) : Math.round(sec); durU = sec >= 120 ? "min" : "s"; } }
+    const alert = st.problem ? this._t("litter_problem") : st.full ? this._t("bin_full") : "";
+    return `
+      <div class="ph">${this._icon("mdi:cat", 'class="ph-ic"')}<div><div class="pt">${lhcEsc(L.name || this._t("litter"))}</div><div class="ps ${st.full || st.problem ? "bad" : ""}">${lhcEsc(this._litterText(st))}</div></div>
+        ${L.clean ? `<button class="cta" data-clean="${lhcEsc(L.clean)}" ${st.cleaning ? "disabled" : ""}>${this._icon("mdi:broom")}${this._t("clean")}</button>` : ""}</div>
+      ${alert ? `<div class="warn">${this._icon("mdi:alert-outline")}${lhcEsc(alert)}</div>` : ""}
+      <div class="stats">
+        ${L.visits ? this._stat("mdi:counter", this._t("visits_today"), vis && vis.v, "") : ""}
+        ${L.weight ? this._stat("mdi:scale-bathroom", this._t("cat_weight"), w && w.v, w ? w.u.toLowerCase() : "kg") : ""}
+        ${L.duration ? this._stat("mdi:timer-outline", this._t("time_today"), durTxt, durU) : ""}
+      </div>
+      ${this._switches(L.switches)}`;
+  }
+
+  _feederPanel(st) {
+    const F = this._cfg.feeder;
+    const n = this._s(F.portions);
+    const max = n ? Number(n.attributes.max) || 10 : 10, min = n ? Math.max(1, Number(n.attributes.min) || 1) : 1;
+    const p = Math.max(min, Math.min(max, this._portions ?? min));
+    const last = this._val(F.last, null);
+    const lastTxt = last ? `${last.v} ${this._t("portions", Number(last.v))}` : null;
+    const when = last && last.s.last_changed ? this._ago(last.s.last_changed) : "";
+    return `
+      <div class="ph">${this._icon("mdi:bowl-mix-outline", 'class="ph-ic"')}<div><div class="pt">${lhcEsc(F.name || this._t("feeder"))}</div><div class="ps">${lhcEsc(this._feederText(st))}</div></div>
+        ${F.quick_feed ? `<button class="cta ghost" data-quick="${lhcEsc(F.quick_feed)}">${this._icon("mdi:lightning-bolt-outline")}${this._t("quick_feed")}</button>` : ""}</div>
+      ${F.last ? `<div class="stats">${this._stat("mdi:food-drumstick-outline", this._t("last_portion") + (when ? ` · ${when}` : ""), lastTxt, "")}</div>` : ""}
+      ${F.portions ? `<div class="feed">
+        <div class="step"><button data-step="-1" ${p <= min ? "disabled" : ""}>${this._icon("mdi:minus")}</button><b>${p}</b><span>${this._t("portions", p)}</span><button data-step="1" data-max="${max}" ${p >= max ? "disabled" : ""}>${this._icon("mdi:plus")}</button></div>
+        <button class="cta" data-feed="${lhcEsc(F.portions)}" data-n="${p}">${this._icon("mdi:food-drumstick-outline")}${this._t("feed_now")}</button>
+      </div>` : ""}
+      ${this._switches(F.switches)}`;
+  }
+
+  /* ---------- actions ---------- */
+  _more(id) { if (id) this.dispatchEvent(new CustomEvent("hass-more-info", { detail: { entityId: id }, bubbles: true, composed: true })); }
+  _press(id) {
+    const dom = id.split(".")[0];
+    if (dom === "button") return this._hass.callService("button", "press", { entity_id: id });
+    if (dom === "script") return this._hass.callService("script", "turn_on", { entity_id: id });
+    return this._hass.callService("homeassistant", "turn_on", { entity_id: id });
+  }
+  _click(e) {
+    const b = e.target.closest("button");
+    if (!b || b.disabled) return;
+    const d = b.dataset;
+    if (d.nav) return lhcNavigate(d.nav);
+    if (d.more !== undefined) return this._more(d.more);
+    if (d.toggle) return this._hass.callService("homeassistant", "toggle", { entity_id: d.toggle });
+    if (d.step) {
+      const F = this._cfg.feeder, n = this._s(F.portions);
+      const max = n ? Number(n.attributes.max) || 10 : 10, min = n ? Math.max(1, Number(n.attributes.min) || 1) : 1;
+      this._portions = Math.max(min, Math.min(max, (this._portions ?? min) + Number(d.step)));
+      return this._update();
+    }
+    if (d.feed) {
+      const n = Number(d.n) || 1;
+      if (!confirm(this._t("feed_confirm", n))) return;
+      this._fedAt = Date.now();
+      this._update();
+      return this._hass.callService("number", "set_value", { entity_id: d.feed, value: n });
+    }
+    if (d.quick) {
+      if (!confirm(this._t("quick_confirm"))) return;
+      this._fedAt = Date.now();
+      this._update();
+      return this._press(d.quick);
+    }
+    if (d.clean) {
+      if (!confirm(this._t("clean_confirm"))) return;
+      return this._press(d.clean);
+    }
+  }
+}
+
+const LCC_STYLE = `:host{display:block;--txt:#eef4ff;--dim:#9fb0cd;font-family:"Inter","Segoe UI",Roboto,system-ui,sans-serif;color:var(--txt)}
+*{box-sizing:border-box}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+button:disabled{cursor:default;opacity:.45}
+ha-icon{--mdc-icon-size:20px;display:inline-flex}
+h2{margin:0}
+
+.glass{position:relative;background:linear-gradient(150deg,rgba(255,255,255,.12),rgba(255,255,255,.035) 45%,rgba(255,255,255,.02)),rgba(12,20,40,.45);
+  border:1px solid rgba(255,255,255,.13);box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 14px 40px rgba(0,0,0,.4);
+  backdrop-filter:blur(22px) saturate(160%);-webkit-backdrop-filter:blur(22px) saturate(160%)}
+
+.wrap{display:grid;grid-template-columns:minmax(0,1.85fr) minmax(290px,1fr);gap:16px;padding:4px}
+.wrap.narrow{grid-template-columns:1fr}
+
+/* ---------- scene ---------- */
+.scene{aspect-ratio:1585/992;border-radius:26px;overflow:hidden;isolation:isolate;background:#151b38}
+.layer{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity 1.2s ease}
+.layer[data-k="night"]{opacity:1}
+.layer[data-k="day"].show{opacity:var(--day,1)}
+.layer.show:not([data-k="day"]):not([data-k="night"]){opacity:1}
+.tint{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity 1.2s ease;
+  background:radial-gradient(ellipse at 30% 20%,rgba(255,170,90,.18),transparent 45%),linear-gradient(180deg,rgba(20,28,70,.55),rgba(10,14,40,.6));mix-blend-mode:multiply}
+.scene.ev .tint{opacity:calc(1 - var(--day,1))}
+
+.fx{position:absolute;pointer-events:none;opacity:0;transition:opacity .8s ease;border-radius:50%}
+.fx-uv{left:25.5%;top:46%;width:12%;height:18%;background:radial-gradient(circle,rgba(167,139,250,.55),rgba(124,58,237,.18) 55%,transparent 72%);mix-blend-mode:screen}
+.scene.uv .fx-uv{opacity:calc(.35 + .5 * (1 - var(--day,1)));animation:breathe 4s ease-in-out infinite}
+.fx-clean{left:22%;top:40%;width:19%;height:30%;background:radial-gradient(circle,rgba(34,211,238,.55),rgba(14,165,233,.15) 55%,transparent 72%);mix-blend-mode:screen}
+.fx-clean i{position:absolute;inset:18%;border-radius:50%;border:2px solid rgba(165,243,252,.55);animation:ripple 2.2s ease-out infinite}
+.fx-clean i+i{animation-delay:1.1s}
+.scene.cleaning .fx-clean{opacity:1}
+.fx-full{left:11%;top:30%;width:28%;height:50%;box-shadow:0 0 0 3px rgba(248,113,113,.7),0 0 40px 10px rgba(248,113,113,.35);border-radius:46% 46% 18% 18%}
+.scene.full .fx-full{opacity:1;animation:alarm 1.6s ease-in-out infinite}
+.fx-feed{left:74%;top:60%;width:17%;height:20%;background:radial-gradient(circle,rgba(251,191,36,.5),rgba(245,158,11,.12) 55%,transparent 72%);mix-blend-mode:screen}
+.scene.eating .fx-feed{opacity:1;animation:breathe 2.6s ease-in-out infinite}
+
+.back{position:absolute;right:3%;top:4%;z-index:2;display:flex;align-items:center;gap:7px;padding:9px 15px;border-radius:999px;font-size:14px;transition:border-color .2s,transform .2s}
+.back:hover{border-color:rgba(147,197,253,.55);transform:translateY(-1px)}
+.back ha-icon{--mdc-icon-size:18px}
+.tiny .back{padding:6px 10px;font-size:12px}.tiny .back span{display:none}
+.head{position:absolute;left:3%;top:4%;max-width:46%;padding:12px 16px;border-radius:18px;background:rgba(8,12,28,.42);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.12)}
+.kicker{font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;color:#8fb4e8}
+.head h2{font-size:24px;font-weight:600;letter-spacing:-.01em;background:linear-gradient(90deg,#fff,#a5c8ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.say{display:flex;align-items:center;gap:6px;margin-top:4px;font-size:14px;color:#dbe7ff}
+.say>span{display:flex;align-items:center;gap:6px}
+.say ha-icon{--mdc-icon-size:18px}
+.say .ok{color:#4ade80}.say .bad{color:#fca5a5}
+.spin{animation:spin 1.6s linear infinite}
+
+.spot{position:absolute;display:flex;align-items:center;gap:7px;padding:7px 12px 7px 9px;border-radius:999px;font-size:13px;white-space:nowrap;transform:translate(-50%,-50%);transition:transform .25s,border-color .25s}
+.spot:hover{transform:translate(-50%,-50%) scale(1.05);border-color:rgba(147,197,253,.6)}
+.spot ha-icon{--mdc-icon-size:17px;color:#93c5fd}
+.spot.bad{border-color:rgba(248,113,113,.75)}.spot.bad ha-icon{color:#f87171}
+.s-litter{left:24.5%;top:29%}
+.s-feeder{left:85%;top:35%}
+
+.tiny .scene{border-radius:20px}
+.tiny .head{left:3%;top:3%;max-width:64%;padding:7px 10px;border-radius:13px}
+.tiny .kicker{display:none}
+.tiny .head h2{font-size:16px}
+.tiny .say{font-size:11.5px;margin-top:1px;gap:4px}
+.tiny .say ha-icon{--mdc-icon-size:14px}
+.tiny .spot{display:none}
+
+/* ---------- panels ---------- */
+.side{display:flex;flex-direction:column;gap:16px;min-width:0}
+.wrap.narrow .side{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.panel{border-radius:22px;padding:16px;display:flex;flex-direction:column;gap:14px}
+.ph{display:flex;align-items:center;gap:12px}
+.ph>div{flex:1;min-width:0}
+.ph-ic{--mdc-icon-size:22px;width:42px;height:42px;border-radius:14px;display:grid;place-items:center;background:rgba(96,165,250,.14);color:#93c5fd;flex:none}
+.pt{font-size:16px;font-weight:600}
+.ps{font-size:13px;color:var(--dim)}.ps.bad{color:#fca5a5}
+.cta{display:flex;align-items:center;gap:7px;padding:10px 15px;border-radius:14px;font-size:14px;font-weight:600;
+  background:linear-gradient(135deg,#3b82f6,#6366f1);box-shadow:0 8px 24px rgba(59,130,246,.35);transition:transform .2s,box-shadow .2s;white-space:nowrap}
+.cta:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 12px 30px rgba(59,130,246,.5)}
+.cta ha-icon{--mdc-icon-size:18px}
+.cta.ghost{background:rgba(255,255,255,.08);box-shadow:none;border:1px solid rgba(255,255,255,.14);font-weight:500}
+.warn{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:12px;font-size:13.5px;background:rgba(248,113,113,.14);border:1px solid rgba(248,113,113,.45);color:#fecaca}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(88px,1fr));gap:10px}
+.stat{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)}
+.stat ha-icon{--mdc-icon-size:17px;color:#93c5fd}
+.stat b{font-size:20px;font-weight:600}
+.stat b small{font-size:12px;font-weight:500;color:var(--dim);margin-left:3px}
+.stat span{font-size:12px;color:var(--dim)}
+.feed{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.step{flex:1;display:flex;align-items:center;justify-content:center;gap:10px;padding:6px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);min-width:150px}
+.step button{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:rgba(255,255,255,.08)}
+.step b{font-size:20px;min-width:22px;text-align:center}
+.step span{font-size:13px;color:var(--dim);min-width:52px}
+.tgl{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
+.tg{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:14px;font-size:13px;text-align:left;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);transition:background .25s,border-color .25s}
+.tg span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tg ha-icon{--mdc-icon-size:18px;color:var(--dim)}
+.tg i{width:26px;height:15px;border-radius:999px;background:rgba(255,255,255,.18);position:relative;flex:none;transition:background .25s}
+.tg i::after{content:"";position:absolute;top:2px;left:2px;width:11px;height:11px;border-radius:50%;background:#fff;transition:transform .25s}
+.tg.on{background:rgba(96,165,250,.16);border-color:rgba(96,165,250,.45)}
+.tg.on ha-icon{color:#93c5fd}.tg.on i{background:#3b82f6}.tg.on i::after{transform:translateX(11px)}
+
+@keyframes breathe{0%,100%{filter:brightness(1)}50%{filter:brightness(1.35)}}
+@keyframes ripple{0%{transform:scale(.5);opacity:.9}100%{transform:scale(1.5);opacity:0}}
+@keyframes alarm{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+`;
+
+if (!customElements.get("living-cats-card")) {
+  customElements.define("living-cats-card", LivingCatsCard);
+  window.customCards = window.customCards || [];
+  window.customCards.push({ type: "living-cats-card", name: "Living Cats Card", description: "A living picture of the cat corner – litter box and pet feeder with live scenes and controls.", preview: false, documentationURL: "https://github.com/krystianokris/living-house-card" });
+}
+
+
+console.info("%c LIVING-HOUSE-CARD %c v0.4.0 ", "background:#2563eb;color:#fff;border-radius:4px 0 0 4px", "background:#0f172a;color:#93c5fd;border-radius:0 4px 4px 0");
 })();

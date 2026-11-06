@@ -18,6 +18,7 @@ let out = [
   read("src/house-card.js").replace("__HOUSE_CSS__", css("src/house.css")),
   read("src/house-editor.js"),
   read("src/rooms-card.js").replace("__ROOMS_CSS__", css("src/rooms.css")),
+  read("src/cats-card.js").replace("__CATS_CSS__", css("src/cats.css")),
   `console.info("%c LIVING-HOUSE-CARD %c v${pkg.version} ", "background:#2563eb;color:#fff;border-radius:4px 0 0 4px", "background:#0f172a;color:#93c5fd;border-radius:0 4px 4px 0");`,
 ].join("\n\n");
 

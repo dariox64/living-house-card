@@ -37,6 +37,12 @@ A second card, **`living-rooms-card`**, turns your rooms into a mosaic of big ph
 |---|---|
 | ![Day and heat map](images/house-day-heatmap.webp) | ![Zoom](images/house-zoom.webp) |
 
+### Cat corner card
+
+**`living-cats-card`** is a living picture of your cat's corner. The scene follows your litter box and pet feeder: the cat appears in the litter box or at the bowl, the litter box glows while it cleans itself, UV light shows in violet, a full bin gets a red ring, and day turns into night with the sun. Glass panels show visits today, cat weight and the last meal, with buttons to clean, feed (choose portions) and toggle night mode, UV or slow feeding. [Configuration](docs/configuration.md#living-cats-card)
+
+![Cat corner](images/cats/day.webp)
+
 ## 🚀 Try it without Home Assistant
 
 ### 👉 [Open the live demo](https://krystianokris.github.io/living-house-card/demo/)

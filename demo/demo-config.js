@@ -134,6 +134,38 @@ Object.assign(window.DEMO_STATES, {
   "sensor.attic_temperature": S("19.1", { unit_of_measurement: "°C" }), "light.attic_storage": light(false, "Attic storage"),
 });
 
+// Cat corner card + its fake devices.
+window.DEMO_CATS = {
+  type: "custom:living-cats-card",
+  cat_name: "Milo",
+  image_base: "../images/cats/",
+  litter: {
+    status: "sensor.litter_box_status", clean: "button.litter_box_clean", bin_full: "binary_sensor.litter_box_bin_full",
+    weight: "sensor.litter_box_cat_weight", visits: "sensor.litter_box_visits_today", duration: "sensor.litter_box_time_today",
+    switches: ["switch.litter_box_night_mode", "switch.litter_box_uv", "switch.litter_box_deodorization"],
+  },
+  feeder: {
+    status: "sensor.pet_feeder_status", portions: "number.pet_feeder_manual_feed", quick_feed: "button.pet_feeder_quick_feed",
+    last: "sensor.pet_feeder_last_portion", switches: ["switch.pet_feeder_slow_feed"],
+  },
+};
+Object.assign(window.DEMO_STATES, {
+  "sensor.litter_box_status": S("standby", { friendly_name: "Litter box" }),
+  "button.litter_box_clean": S("unknown", { friendly_name: "Clean" }),
+  "binary_sensor.litter_box_bin_full": S("off", { friendly_name: "Bin full" }),
+  "sensor.litter_box_cat_weight": S("5.1", { unit_of_measurement: "kg" }),
+  "sensor.litter_box_visits_today": S("5"),
+  "sensor.litter_box_time_today": S("119", { unit_of_measurement: "s" }),
+  "switch.litter_box_night_mode": S("off", { friendly_name: "Night mode" }),
+  "switch.litter_box_uv": S("on", { friendly_name: "UV" }),
+  "switch.litter_box_deodorization": S("off", { friendly_name: "Deodorization" }),
+  "sensor.pet_feeder_status": S("standby", { friendly_name: "Pet feeder" }),
+  "number.pet_feeder_manual_feed": S("1", { min: 1, max: 6, step: 1 }),
+  "button.pet_feeder_quick_feed": S("unknown"),
+  "sensor.pet_feeder_last_portion": { state: "2", attributes: { unit_of_measurement: "portions" }, last_changed: new Date(Date.now() - 95 * 60e3).toISOString() },
+  "switch.pet_feeder_slow_feed": S("off", { friendly_name: "Slow feed" }),
+});
+
 // Ready-made houses: same entities, positions come from the preset.
 window.DEMO_PRESETS = ["2-bedrooms", "3-bedrooms", "basement", "attic", "3-bedrooms-basement", "3-bedrooms-attic", "basement-attic", "3-bedrooms-basement-attic"];
 window.demoPresetConfig = (preset) => {

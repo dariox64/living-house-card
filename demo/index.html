@@ -26,7 +26,7 @@ customElements.define("ha-icon", class extends HTMLElement {
 </head>
 <body>
 <div class="bar">
-  <a href="?card=house">3D house</a><a href="?card=rooms">Rooms</a>
+  <a href="?card=house">3D house</a><a href="?card=rooms">Rooms</a><a href="?card=cats">Cats</a>
   <span id="houses"></span>
   <a href="#" id="lang">PL / EN</a><a href="#" id="night">Day / night</a>
 </div>
@@ -62,6 +62,15 @@ const hass = {
       if (service === "set_percentage") setState(id, { attributes: { percentage: data.percentage, preset_mode: null } });
       if (service === "set_preset_mode") setState(id, { attributes: { preset_mode: data.preset_mode } });
       if (service === "volume_set") setState(id, { attributes: { volume_level: data.volume_level } });
+      // cat corner: feeding and cleaning play out over a few seconds
+      if (id.startsWith("number.pet_feeder") || id === "button.pet_feeder_quick_feed") {
+        setState("sensor.pet_feeder_status", { state: "feeding" });
+        setTimeout(() => { setState("sensor.pet_feeder_status", { state: "standby" }); states["sensor.pet_feeder_last_portion"] = { state: String(data.value || 1), attributes: { unit_of_measurement: "portions" }, last_changed: new Date().toISOString() }; push(); }, 6000);
+      }
+      if (id === "button.litter_box_clean") {
+        setState("sensor.litter_box_status", { state: "cleaning" });
+        setTimeout(() => { setState("sensor.litter_box_status", { state: "standby" }); push(); }, 7000);
+      }
     }
     push();
   },
@@ -70,14 +79,15 @@ let card;
 function push() { card.hass = { ...hass, states: { ...states } }; }
 function mount() {
   const house = qs().get("house") || "";
-  const which = qs().get("card") === "rooms" ? "rooms" : "house:" + house;
+  const which = qs().get("card") === "rooms" ? "rooms" : qs().get("card") === "cats" ? "cats" : "house:" + house;
   if (card && card.dataset.which === which) return;
   if (card) card.remove();
-  card = document.createElement(which === "rooms" ? "living-rooms-card" : "living-house-card");
+  card = document.createElement(which === "rooms" ? "living-rooms-card" : which === "cats" ? "living-cats-card" : "living-house-card");
   card.dataset.which = which;
-  card.setConfig(which === "rooms" ? window.DEMO_ROOMS : house ? window.demoPresetConfig(house) : window.DEMO_HOUSE);
+  card.setConfig(which === "rooms" ? window.DEMO_ROOMS : which === "cats" ? window.DEMO_CATS : house ? window.demoPresetConfig(house) : window.DEMO_HOUSE);
+  if (which === "cats") card.style.cssText = "display:block;max-width:1400px;margin:0 auto;padding:16px";
   const names = { "2-bedrooms": "2 bed", "3-bedrooms": "3 bed", basement: "2 bed + basement", attic: "2 bed + attic", "3-bedrooms-basement": "3 bed + basement", "3-bedrooms-attic": "3 bed + attic", "basement-attic": "2 bed + basement + attic", "3-bedrooms-basement-attic": "3 bed + basement + attic" };
-  document.getElementById("houses").innerHTML = which === "rooms" ? "" : window.DEMO_PRESETS.map((k) =>
+  document.getElementById("houses").innerHTML = which === "rooms" || which === "cats" ? "" : window.DEMO_PRESETS.map((k) =>
     `<a href="?card=house&house=${k}" class="${(house || "2-bedrooms") === k ? "on" : ""}">${names[k]}</a>`).join("");
   document.body.prepend(card);
   push();

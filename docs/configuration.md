@@ -178,6 +178,63 @@ rooms:
 
 The mosaic layout is automatic: it fills a 4-column grid and widens the last tiles so there are no gaps.
 
+A tile can also be a shortcut to another view instead of a room – add `link:` (for example to the cat corner):
+
+```yaml
+    - id: cats
+      name: Cat corner
+      icon: mdi:cat
+      image: /local/living-house/cats/day.webp
+      link: /dashboard-rooms/cats
+```
+
+---
+
+## living-cats-card
+
+A living picture of the cat corner. Every key is optional except one of `litter:` / `feeder:`.
+
+```yaml
+type: custom:living-cats-card
+cat_name: Milo                       # used in "Milo is eating"
+title: Cat corner                    # default: cat_name or "Cat corner"
+back_path: /dashboard-rooms/rooms    # optional "← Rooms" button (handy with kiosk mode)
+back_name: Rooms
+sun: sun.sun                         # day/night (default sun.sun); force: day | night
+litter:
+  status: sensor.litter_box_status   # standby / cleaning / occupied / caking / full / fault …
+  clean: button.litter_box_clean     # button, script or switch
+  bin_full: binary_sensor.litter_box_bin_full
+  problem: binary_sensor.litter_box_problem
+  presence: binary_sensor.cat_in_litter_box   # optional, if the status has no "occupied"
+  weight: sensor.litter_box_cat_weight
+  visits: sensor.litter_box_visits_today
+  duration: sensor.litter_box_time_today       # seconds or minutes
+  switches:                          # night mode, UV, deodorization … (icon guessed from the id)
+    - switch.litter_box_night_mode
+    - entity: switch.litter_box_uv
+      name: UV lamp
+feeder:
+  status: sensor.pet_feeder_status   # standby / feeding / feeding_complete / fault
+  portions: number.pet_feeder_manual_feed      # "Feed now" sets this number
+  quick_feed: button.pet_feeder_quick_feed
+  last: sensor.pet_feeder_last_portion
+  switches: [switch.pet_feeder_slow_feed]
+```
+
+Scenes (in this order): **cleaning** → **cat in the litter box** → **cat eating** (while feeding and 3 minutes after) → day/night picture. At night the event pictures are tinted to match.
+
+Pictures: by default they come from this repository (`images/cats/`). Use `image_base: /local/living-house/cats/` for local copies, or your own pictures with the same camera angle:
+
+```yaml
+images:
+  day: /local/cats/day.webp
+  night: /local/cats/night.webp
+  litter: /local/cats/litter.webp     # cat inside the litter box
+  eating: /local/cats/eating.webp     # cat at the bowl
+  cleaning: /local/cats/cleaning.webp # litter box cleaning
+```
+
 ---
 
 ## Scenes

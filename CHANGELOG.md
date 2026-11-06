@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.4.0 – Cat corner
+
+### New
+- New card `living-cats-card`: a living picture of the cat corner. The scene follows the litter box and the pet feeder – cat in the litter box, cat eating, cleaning glow, UV light, red ring when the bin is full, day/night with the sun (event scenes tinted at night).
+- Glass panels: litter box status, visits today, cat weight, time today, clean button; feeder status, last meal, portion stepper with "Feed now", quick feed; any number of toggles (night mode, UV, deodorization, slow feed…).
+- Pictures served from the repository (CDN) or locally with `image_base`; own pictures with `images:`.
+- `back_path` / `back_name`: a back button on the cat corner (works with kiosk mode).
+- `living-rooms-card`: a tile can be a shortcut to another view with `link:` (it is left out of the room tabs).
+- Demo: `?card=cats`.
+- More litter box and feeder states translated (caking, occupied, blocked, fed).
+
 ## 0.3.0 – Ready-made houses
 
 ### New

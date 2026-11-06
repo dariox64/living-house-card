@@ -32,7 +32,7 @@ class LivingRoomsCard extends HTMLElement {
       const id = String(r.id || `room${i + 1}`).replace(/[^\w-]/g, "-");
       const t = r.temperature;
       return {
-        id, name: r.name || id, icon: r.icon || "mdi:home-outline", image: r.image || "", subtitle: r.subtitle || "",
+        id, name: r.name || id, icon: r.icon || "mdi:home-outline", image: r.image || "", subtitle: r.subtitle || "", link: r.link || null,
         accent: lhcRgb(r.accent, LRC_PALETTE[i % LRC_PALETTE.length]), size: r.size || (i === 0 ? "big" : "normal"),
         temp: t && !String(t).startsWith("climate.") ? t : null, tempClimate: t && String(t).startsWith("climate.") ? t : null,
         hum: r.humidity || null,
@@ -197,7 +197,7 @@ class LivingRoomsCard extends HTMLElement {
 
   _route() {
     const id = decodeURIComponent((location.hash || "").slice(1));
-    const r = this._rooms.find((x) => x.id === id);
+    const r = this._rooms.find((x) => x.id === id && !x.link);
     if (r && this._view !== r.id) this._showRoom(r.id, null);
     else if (!r && this._view) this._showHub();
   }
@@ -224,7 +224,7 @@ class LivingRoomsCard extends HTMLElement {
       </header>
       <div class="bento" style="--rows:${rows}">
         ${this._rooms.map((r, i) => `
-          <article class="tile t-${r.id} sz-${sizes[i]} rise" style="--d:${i + 1};--acc:${r.accent}" data-open="${r.id}">
+          <article class="tile t-${r.id} sz-${sizes[i]} rise" style="--d:${i + 1};--acc:${r.accent}" ${r.link ? `data-nav="${lhcEsc(r.link)}"` : `data-open="${r.id}"`}>
             <div class="t-img" style="${this._img(r) ? `background-image:url('${lhcEsc(this._img(r))}')` : ""}"></div>
             <div class="t-shade"></div><div class="t-glare"></div>
             <div class="t-top">
@@ -326,8 +326,9 @@ class LivingRoomsCard extends HTMLElement {
     else { history.pushState(null, "", `${location.pathname}${location.search}`); this._showHub(); }
   }
   _step(dir) {
-    const i = this._rooms.findIndex((r) => r.id === this._view);
-    const n = this._rooms[(i + dir + this._rooms.length) % this._rooms.length];
+    const list = this._rooms.filter((r) => !r.link);
+    const i = list.findIndex((r) => r.id === this._view);
+    const n = list[(i + dir + list.length) % list.length];
     history.replaceState({ lrc: n.id }, "", `${location.pathname}${location.search}#${n.id}`);
     this._showRoom(n.id, null, dir);
   }
@@ -446,7 +447,7 @@ class LivingRoomsCard extends HTMLElement {
       <div class="rtop" style="--acc:${r.accent}">
         ${home ? `<button class="back home glass" data-nav="${lhcEsc(home)}">${this._icon("mdi:home-outline")}<span>${this._t("home")}</span></button>` : ""}
         <button class="back glass" data-hub="1">${this._icon("mdi:view-grid-outline")}<span>${lhcEsc(this._cfg.title || this._t("all_rooms"))}</span></button>
-        <nav class="rtabs">${this._rooms.map((x) => `<button class="rtab ${x.id === r.id ? "on" : ""}" data-goto="${x.id}" style="--acc:${x.accent}">${this._icon(x.icon)}<span>${lhcEsc(x.name)}</span></button>`).join("")}</nav>
+        <nav class="rtabs">${this._rooms.filter((x) => !x.link).map((x) => `<button class="rtab ${x.id === r.id ? "on" : ""}" data-goto="${x.id}" style="--acc:${x.accent}">${this._icon(x.icon)}<span>${lhcEsc(x.name)}</span></button>`).join("")}</nav>
       </div>
       <div class="rgrid ${cC ? "" : "two"}">
         <div class="col colA">
