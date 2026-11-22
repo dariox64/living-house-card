@@ -303,7 +303,7 @@ class LivingHouseCard extends HTMLElement {
       this._root.addEventListener("pointerdown", (e) => this._edPointerDown(e));
     }
     const c = this._cfg;
-    const img = c.image ? lhcEsc(c.image) : "";
+    const img = c.image ? lhcEsc(lhcImg(c.image)) : "";
     const [h0, h1] = c.heatmap_range || [16, 26];
     this._root.innerHTML = `
       <style>${LHC_HOUSE_STYLE}</style>

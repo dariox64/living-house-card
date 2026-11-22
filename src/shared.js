@@ -4,6 +4,8 @@ const LHC_BAD = ["unknown", "unavailable", undefined, null, ""];
 const LHC_TV_ON = ["on", "playing", "paused", "buffering"];
 
 const lhcEsc = (x) => String(x ?? "").replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
+// `image: lhc:<name>` -> photo embedded in this file (my-house/web/<name>.jpg)
+const lhcImg = (s) => { const m = /^lhc:(.+)$/.exec(String(s ?? "")); return m && typeof LHC_EMBEDDED !== "undefined" && LHC_EMBEDDED[m[1]] ? LHC_EMBEDDED[m[1]] : s; };
 const lhcArr = (x) => (x == null ? [] : Array.isArray(x) ? x : [x]);
 const lhcUniq = (a) => [...new Set(a.filter(Boolean))];
 

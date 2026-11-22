@@ -1,6 +1,6 @@
 // Builds dist/living-house-card.js from src/ (no dependencies).
 // Usage: node scripts/build.mjs
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -11,9 +11,15 @@ const pkg = JSON.parse(read("package.json"));
 // CSS is inlined as a template literal so `${...}` constants keep working.
 const css = (p) => "`" + read(p).replace(/\\/g, "\\\\").replace(/`/g, "\\`").trim() + "\n`";
 
+// Own house photos from my-house/web/*.jpg are embedded so HACS only has to deliver one JS file.
+const embDir = join(root, "my-house", "web");
+const emb = existsSync(embDir) ? Object.fromEntries(readdirSync(embDir).filter((f) => /\.jpe?g$/i.test(f)).map((f) => [f.replace(/\.jpe?g$/i, ""), "data:image/jpeg;base64," + readFileSync(join(embDir, f)).toString("base64")])) : {};
+const embedded = `const LHC_EMBEDDED = ${JSON.stringify(emb)};`;
+
 const banner = `/*! Living House Card v${pkg.version} | MIT License | https://github.com/krystianokris/living-house-card */\n`;
 let out = [
   read("src/shared.js").replace("__VERSION__", pkg.version),
+  embedded,
   read("src/presets.js"),
   read("src/house-card.js").replace("__HOUSE_CSS__", css("src/house.css")),
   read("src/house-editor.js"),
